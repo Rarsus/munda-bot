@@ -84,43 +84,59 @@ export class SlashCommandManager {
           .setDescription(command.description || 'No description provided');
 
         // Set default member permissions if required
+        // Note: @discordjs/builders@0.16.0 (discord.js v13) doesn't support setDefaultMemberPermissions
+        // Permissions are checked at runtime in the command's execute method
         if (command.requiredPermissions && command.requiredPermissions.length > 0) {
-          let permissions = 0;
+          const builderAny = builder as unknown as {
+            setDefaultMemberPermissions?: (perms: number) => unknown;
+          };
 
-          // Map permission names to Discord permission bits
-          for (const perm of command.requiredPermissions) {
-            const permValue = (Permissions.FLAGS as any)[perm];
-            if (permValue) {
-              permissions |= permValue;
+          // Only try to set permissions if the method exists
+          if (builderAny.setDefaultMemberPermissions) {
+            let permissions = 0;
+
+            // Map permission names to Discord permission bits
+            for (const perm of command.requiredPermissions) {
+              const permValue = (Permissions.FLAGS as any)[perm];
+              if (permValue) {
+                permissions |= permValue;
+              }
             }
-          }
 
-          if (permissions > 0) {
-            (builder as unknown as {
-              setDefaultMemberPermissions: (perms: number) => unknown;
-            }).setDefaultMemberPermissions(permissions);
+            if (permissions > 0) {
+              builderAny.setDefaultMemberPermissions(permissions);
+            }
+
+            logger.debug(`Set permissions for ${command.name}: ${permissions}`, {
+              service: 'SlashCommandManager',
+            });
           }
         }
 
         // Add optional string option if command has arguments
-        if (command.usage && command.usage.includes('[')) {
+        // Only add if the usage pattern is simple (avoid multi-subcommand patterns)
+        if (command.usage && command.usage.includes('[') && !command.usage.includes('|')) {
           const match = command.usage.match(/\[([^\]]+)\]/);
           if (match) {
             const optionName = match[1];
-            // Use type casting for the builder
-            const builderAny = builder as unknown as {
-              addStringOption: (fn: unknown) => unknown;
-            };
             
-            builderAny.addStringOption((option: unknown) => {
-              const optAny = option as unknown as {
-                setName: (n: string) => unknown;
-                setDescription: (d: string) => unknown;
+            // Validate option name (Discord has length/character restrictions)
+            if (optionName.length <= 32 && /^[a-z0-9_-]+$/i.test(optionName)) {
+              // Use type casting for the builder
+              const builderAny = builder as unknown as {
+                addStringOption: (fn: unknown) => unknown;
               };
-              optAny.setName(optionName);
-              optAny.setDescription(`${optionName} (optional)`);
-              return option;
-            });
+              
+              builderAny.addStringOption((option: unknown) => {
+                const optAny = option as unknown as {
+                  setName: (n: string) => unknown;
+                  setDescription: (d: string) => unknown;
+                };
+                optAny.setName(optionName);
+                optAny.setDescription(`${optionName} (optional)`);
+                return option;
+              });
+            }
           }
         }
 

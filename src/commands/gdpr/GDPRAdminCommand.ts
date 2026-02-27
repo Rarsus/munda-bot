@@ -28,22 +28,22 @@ export class GDPRAdminCommand extends Command {
     'gdpr-admin execute erasure_694535322012483644_1709024400000',
     'gdpr-admin restore erasure_694535322012483644_1709024400000 User changed mind',
   ];
-  requiredPermissions: string[] = ['ADMINISTRATOR'];
+  requiredPermissions: string[] = ['Administrator'];
 
   async execute(context: Message | CommandInteraction): Promise<void> {
     const userId = context instanceof Message ? context.author.id : context.user.id;
 
     // Check admin permission
     const isAdmin = context instanceof Message
-      ? context.member?.permissions.has('ADMINISTRATOR')
-      : context.memberPermissions?.has('ADMINISTRATOR');
+      ? context.member?.permissions.has('Administrator')
+      : context.memberPermissions?.has('Administrator');
 
     if (!isAdmin) {
       const errorEmbed = new EmbedBuilder()
         .setColor(0x0099ff)
         .setTitle('❌ Permission Denied')
         .setDescription('Only administrators can use this command')
-        .setFooter('Required permission: ADMINISTRATOR');
+        .setFooter({ text: 'Required permission: ADMINISTRATOR' });
 
       if (context instanceof Message) {
         await context.reply({ embeds: [errorEmbed] });
@@ -66,7 +66,7 @@ export class GDPRAdminCommand extends Command {
         subcommand = args[0]?.toLowerCase();
         requestId = args[1];
         reason = args.slice(2).join(' ') || undefined;
-      } else {
+      } else if ('options' in context) {
         const options = context.options as any;
         subcommand = options.getSubcommand?.() || options.data?.[0]?.name;
         requestId = options.getString?.('request-id') || options.data?.[1]?.value;
@@ -93,11 +93,13 @@ export class GDPRAdminCommand extends Command {
           const helpEmbed = new EmbedBuilder()
             .setColor(0x0099ff)
             .setTitle('📖 GDPR Admin Commands')
-            .addField('list', 'Show all pending deletion requests', false)
-            .addField('approve <request-id>', 'Approve a deletion request', false)
-            .addField('deny <request-id> [reason]', 'Deny a deletion request', false)
-            .addField('execute <request-id>', 'Immediately execute deletion', false)
-            .addField('restore <request-id> [reason]', 'Restore deleted data', false);
+            .addFields(
+              { name: 'list', value: 'Show all pending deletion requests', inline: false },
+              { name: 'approve <request-id>', value: 'Approve a deletion request', inline: false },
+              { name: 'deny <request-id> [reason]', value: 'Deny a deletion request', inline: false },
+              { name: 'execute <request-id>', value: 'Immediately execute deletion', inline: false },
+              { name: 'restore <request-id> [reason]', value: 'Restore deleted data', inline: false }
+            );
 
           if (context instanceof Message) {
             await context.reply({ embeds: [helpEmbed] });
@@ -112,7 +114,7 @@ export class GDPRAdminCommand extends Command {
         .setColor(0x0099ff)
         .setTitle('❌ Error')
         .setDescription('An error occurred processing your request')
-        .setFooter('Check logs for details');
+        .setFooter({ text: 'Check logs for details' });
 
       if (context instanceof Message) {
         await context.reply({ embeds: [errorEmbed] });
@@ -130,7 +132,7 @@ export class GDPRAdminCommand extends Command {
         .setColor(0x0099ff)
         .setTitle('✅ No Pending Requests')
         .setDescription('All deletion requests have been processed')
-        .setFooter('Last updated: ' + new Date().toISOString());
+        .setFooter({ text: 'Last updated: ' + new Date().toISOString() });
 
       if (context instanceof Message) {
         await context.reply({ embeds: [embed] });
@@ -148,18 +150,18 @@ export class GDPRAdminCommand extends Command {
 
     for (const req of requests.slice(0, 10)) {
       const daysOld = Math.floor((Date.now() - new Date(req.requested_at).getTime()) / (1000 * 60 * 60 * 24));
-      embed.addField(
-        `${req.id}`,
-        `User: ${req.user_id}\nSubmitted: ${daysOld}d ago\nStatus: ${req.status}`,
-        false
-      );
+      embed.addFields({
+        name: `${req.id}`,
+        value: `User: ${req.user_id}\nSubmitted: ${daysOld}d ago\nStatus: ${req.status}`,
+        inline: false
+      });
     }
 
     if (requests.length > 10) {
-      embed.addField('⚠️ Note', `Showing 10 of ${requests.length} requests`, false);
+      embed.addFields({ name: '⚠️ Note', value: `Showing 10 of ${requests.length} requests`, inline: false });
     }
 
-    embed.setFooter('Last updated: ' + new Date().toISOString());
+    embed.setFooter({ text: 'Last updated: ' + new Date().toISOString() });
 
     if (context instanceof Message) {
       await context.reply({ embeds: [embed] });
@@ -200,11 +202,13 @@ export class GDPRAdminCommand extends Command {
     const embed = new EmbedBuilder()
       .setColor(0x0099ff)
       .setTitle('✅ Deletion Request Approved')
-      .addField('Request ID', result.id, false)
-      .addField('User', result.user_id, false)
-      .addField('Expires At', new Date(result.expires_at).toISOString(), false)
-      .addField('Action', 'Data will be automatically deleted in 30 days', false)
-      .setFooter('Approval logged in audit trail');
+      .addFields(
+        { name: 'Request ID', value: result.id, inline: false },
+        { name: 'User', value: result.user_id, inline: false },
+        { name: 'Expires At', value: new Date(result.expires_at).toISOString(), inline: false },
+        { name: 'Action', value: 'Data will be automatically deleted in 30 days', inline: false }
+      )
+      .setFooter({ text: 'Approval logged in audit trail' });
 
     if (context instanceof Message) {
       await context.reply({ embeds: [embed] });
@@ -247,14 +251,16 @@ export class GDPRAdminCommand extends Command {
     const embed = new EmbedBuilder()
       .setColor(0x0099ff)
       .setTitle('❌ Deletion Request Denied')
-      .addField('Request ID', result.id, false)
-      .addField('User', result.user_id, false);
+      .addFields(
+        { name: 'Request ID', value: result.id, inline: false },
+        { name: 'User', value: result.user_id, inline: false }
+      );
 
     if (result.denied_reason) {
-      embed.addField('Reason', result.denied_reason, false);
+      embed.addFields({ name: 'Reason', value: result.denied_reason, inline: false });
     }
 
-    embed.setFooter('Denial logged in audit trail');
+    embed.setFooter({ text: 'Denial logged in audit trail' });
 
     if (context instanceof Message) {
       await context.reply({ embeds: [embed] });
@@ -296,11 +302,13 @@ export class GDPRAdminCommand extends Command {
     const embed = new EmbedBuilder()
       .setColor(0x0099ff)
       .setTitle('🗑️ Data Deletion Executed')
-      .addField('Request ID', result.request_id, false)
-      .addField('User', result.user_id, false)
-      .addField('Deleted At', new Date().toISOString(), false)
-      .addField('Status', 'COMPLETED', false)
-      .setFooter('Deletion logged in audit trail');
+      .addFields(
+        { name: 'Request ID', value: result.request_id, inline: false },
+        { name: 'User', value: result.user_id, inline: false },
+        { name: 'Deleted At', value: new Date().toISOString(), inline: false },
+        { name: 'Status', value: 'COMPLETED', inline: false }
+      )
+      .setFooter({ text: 'Deletion logged in audit trail' });
 
     if (context instanceof Message) {
       await context.reply({ embeds: [embed] });
@@ -343,15 +351,17 @@ export class GDPRAdminCommand extends Command {
     const embed = new EmbedBuilder()
       .setColor(0x0099ff)
       .setTitle('💾 Deletion Request Restored')
-      .addField('Request ID', result.id, false)
-      .addField('User', result.user_id, false)
-      .addField('Status', 'RESTORED', false);
+      .addFields(
+        { name: 'Request ID', value: result.id, inline: false },
+        { name: 'User', value: result.user_id, inline: false },
+        { name: 'Status', value: 'RESTORED', inline: false }
+      );
 
     if (result.restore_reason) {
-      embed.addField('Reason', result.restore_reason, false);
+      embed.addFields({ name: 'Reason', value: result.restore_reason, inline: false });
     }
 
-    embed.setFooter('Restoration logged in audit trail');
+    embed.setFooter({ text: 'Restoration logged in audit trail' });
 
     if (context instanceof Message) {
       await context.reply({ embeds: [embed] });

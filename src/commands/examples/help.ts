@@ -27,7 +27,11 @@ export class HelpCommand extends Command {
       const args = context.content.split(/\s+/).slice(1);
       commandName = args[0] || undefined;
     } else {
-      commandName = context.options.getString('command') || undefined;
+      try {
+        commandName = ((context as any).options as any)?.getString?.('command') || undefined;
+      } catch {
+        // options not available
+      }
     }
 
     if (commandName) {
@@ -50,7 +54,7 @@ export class HelpCommand extends Command {
       }
 
       if (command.examples && command.examples.length > 0) {
-        embed.addField('Examples', command.examples.map((e) => `\`!${e}\``).join('\n'));
+        embed.addFields({ name: 'Examples', value: command.examples.map((e) => `\`!${e}\``).join('\n') });
       }
 
       if (context instanceof Message) {

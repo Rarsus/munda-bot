@@ -32,9 +32,9 @@ export class GDPRStatusCommand extends Command {
       if (context instanceof Message) {
         const args = context.content.split(/\s+/).slice(1);
         requestId = args[0];
-      } else {
+      } else if ('options' in context) {
         requestId = (context.options as any).getString?.('request-id') || 
-                   context.options?.data?.[0]?.value as string;
+                   (context.options as any)?.data?.[0]?.value as string;
       }
 
       if (!requestId) {
@@ -42,9 +42,11 @@ export class GDPRStatusCommand extends Command {
           .setColor(0x0099ff)
           .setTitle('❌ Missing Request ID')
           .setDescription('Please provide your deletion request ID')
-          .addField('Usage', '`/gdprstatus <request-id>`', false)
-          .addField('Example', '`/gdprstatus erasure_694535322012483644_1709024400000`', false)
-          .setFooter('You can find your request ID in the confirmation message');
+          .addFields(
+            { name: 'Usage', value: '`/gdprstatus <request-id>`', inline: false },
+            { name: 'Example', value: '`/gdprstatus erasure_694535322012483644_1709024400000`', inline: false }
+          )
+          .setFooter({ text: 'You can find your request ID in the confirmation message' });
 
         if (context instanceof Message) {
           await context.reply({ embeds: [errorEmbed] });
@@ -62,8 +64,8 @@ export class GDPRStatusCommand extends Command {
           .setColor(0x0099ff)
           .setTitle('⚠️ Request Not Found')
           .setDescription(`No deletion request found with ID: ${requestId}`)
-          .addField('What to do', 'Double-check the request ID and try again', false)
-          .setFooter('Request IDs start with "erasure_"');
+          .addFields({ name: 'What to do', value: 'Double-check the request ID and try again', inline: false })
+          .setFooter({ text: 'Request IDs start with "erasure_"' });
 
         if (context instanceof Message) {
           await context.reply({ embeds: [notFoundEmbed] });
@@ -89,7 +91,7 @@ export class GDPRStatusCommand extends Command {
           .setColor(0x0099ff)
           .setTitle('❌ Unauthorized')
           .setDescription('You can only view your own deletion requests')
-          .setFooter('If you need help, contact support');
+          .setFooter({ text: 'If you need help, contact support' });
 
         if (context instanceof Message) {
           await context.reply({ embeds: [unauthorizedEmbed] });
@@ -109,46 +111,48 @@ export class GDPRStatusCommand extends Command {
       const statusEmbed = new EmbedBuilder()
         .setColor(statusColor as any)
         .setTitle(`${statusEmoji} Deletion Request Status`)
-        .addField('Request ID', status.request_id, false)
-        .addField('Status', `\`${status.status.toUpperCase()}\``, true)
-        .addField('Submitted', new Date(status.requested_at).toISOString(), true);
+        .addFields(
+          { name: 'Request ID', value: status.request_id, inline: false },
+          { name: 'Status', value: `\`${status.status.toUpperCase()}\``, inline: true },
+          { name: 'Submitted', value: new Date(status.requested_at).toISOString(), inline: true }
+        );
 
       if (status.approved_at) {
-        statusEmbed.addField('Approved', new Date(status.approved_at).toISOString(), true);
+        statusEmbed.addFields({ name: 'Approved', value: new Date(status.approved_at).toISOString(), inline: true });
       }
 
       if (status.denied_at) {
-        statusEmbed.addField('Denied', new Date(status.denied_at).toISOString(), true);
+        statusEmbed.addFields({ name: 'Denied', value: new Date(status.denied_at).toISOString(), inline: true });
         if (status.denied_reason) {
-          statusEmbed.addField('Denial Reason', status.denied_reason, false);
+          statusEmbed.addFields({ name: 'Denial Reason', value: status.denied_reason, inline: false });
         }
       }
 
       if (status.restored_at) {
-        statusEmbed.addField('Restored', new Date(status.restored_at).toISOString(), true);
+        statusEmbed.addFields({ name: 'Restored', value: new Date(status.restored_at).toISOString(), inline: true });
         if (status.restore_reason) {
-          statusEmbed.addField('Restoration Reason', status.restore_reason, false);
+          statusEmbed.addFields({ name: 'Restoration Reason', value: status.restore_reason, inline: false });
         }
       }
 
       if (status.completed_at) {
-        statusEmbed.addField('Completed', new Date(status.completed_at).toISOString(), true);
+        statusEmbed.addFields({ name: 'Completed', value: new Date(status.completed_at).toISOString(), inline: true });
       }
 
-      statusEmbed.addField('Timeline', timelineText, false);
+      statusEmbed.addFields({ name: 'Timeline', value: timelineText, inline: false });
 
       if (status.expires_at && !status.completed_at && !status.denied_at && !status.restored_at) {
         const daysRemaining = Math.ceil(
           (new Date(status.expires_at).getTime() - Date.now()) / (1000 * 60 * 60 * 24)
         );
-        statusEmbed.addField(
-          'Expires In',
-          daysRemaining > 0 ? `${daysRemaining} days` : 'Expired - scheduled for cleanup',
-          false
-        );
+        statusEmbed.addFields({
+          name: 'Expires In',
+          value: daysRemaining > 0 ? `${daysRemaining} days` : 'Expired - scheduled for cleanup',
+          inline: false
+        });
       }
 
-      statusEmbed.setFooter('All times are in UTC');
+      statusEmbed.setFooter({ text: 'All times are in UTC' });
 
       if (context instanceof Message) {
         await context.reply({ embeds: [statusEmbed] });
@@ -171,7 +175,7 @@ export class GDPRStatusCommand extends Command {
         .setColor(0x0099ff)
         .setTitle('❌ Error Checking Status')
         .setDescription('An error occurred while checking your request status')
-        .setFooter('Please try again in a moment');
+        .setFooter({ text: 'Please try again in a moment' });
 
       if (context instanceof Message) {
         await context.reply({ embeds: [errorEmbed] });

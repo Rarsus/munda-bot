@@ -50,7 +50,7 @@ export async function handleError(
     .setColor(0x0099ff)
     .setTitle('❌ Command Error')
     .setDescription(appError.message)
-    .addField('Error Code', appError.code)
+    .addFields({ name: 'Error Code', value: appError.code })
     .setTimestamp();
 
   try {

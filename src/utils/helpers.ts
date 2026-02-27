@@ -1,10 +1,10 @@
 import { EmbedBuilder } from '@discordjs/builders';
-import { MessageEmbed, User } from 'discord.js';
+import { User } from 'discord.js';
 
 /**
  * Create success embed
  */
-export function createSuccessEmbed(title: string, description?: string): MessageEmbed {
+export function createSuccessEmbed(title: string, description?: string): EmbedBuilder {
   return new EmbedBuilder()
     .setTitle(`✅ ${title}`)
     .setDescription(description || '')
@@ -15,7 +15,7 @@ export function createSuccessEmbed(title: string, description?: string): Message
 /**
  * Create error embed
  */
-export function createErrorEmbed(title: string, description?: string): MessageEmbed {
+export function createErrorEmbed(title: string, description?: string): EmbedBuilder {
   return new EmbedBuilder()
     .setTitle(`❌ ${title}`)
     .setDescription(description || '')
@@ -26,7 +26,7 @@ export function createErrorEmbed(title: string, description?: string): MessageEm
 /**
  * Create info embed
  */
-export function createInfoEmbed(title: string, description?: string): MessageEmbed {
+export function createInfoEmbed(title: string, description?: string): EmbedBuilder {
   return new EmbedBuilder()
     .setTitle(`ℹ️ ${title}`)
     .setDescription(description || '')
@@ -37,7 +37,7 @@ export function createInfoEmbed(title: string, description?: string): MessageEmb
 /**
  * Create user embed
  */
-export function createUserEmbed(user: User): MessageEmbed {
+export function createUserEmbed(user: User): EmbedBuilder {
   return new EmbedBuilder()
     .setTitle(`👤 ${user.username}`)
     .setDescription(`ID: ${user.id}`)

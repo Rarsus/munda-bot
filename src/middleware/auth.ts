@@ -1,4 +1,4 @@
-import { Message, CommandInteraction, Permissions } from 'discord.js';
+import { Message, CommandInteraction, PermissionFlagsBits } from 'discord.js';
 import { AuthorizationError } from './errorHandler';
 
 /**
@@ -18,7 +18,7 @@ export function checkPermissions(
   }
 
   return requiredPermissions.every((perm) => {
-    const permValue = (Permissions.FLAGS as any)[perm];
+    const permValue = (PermissionFlagsBits as any)[perm];
     return permValue && (member.permissions as any).has(permValue);
   });
 }
@@ -50,7 +50,7 @@ export function isAdmin(context: Message | CommandInteraction): boolean {
     return false;
   }
 
-  return member.permissions.has(Permissions.FLAGS.ADMINISTRATOR);
+  return member.permissions.has(PermissionFlagsBits.Administrator);
 }
 
 /**

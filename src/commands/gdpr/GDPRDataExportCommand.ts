@@ -46,15 +46,17 @@ export class GDPRDataExportCommand extends Command {
         .setColor(0x0099ff)
         .setTitle('✅ Data Export Created')
         .setDescription('Your complete data package has been generated and is ready for download.')
-        .addField(
-          'Contents',
-          `- Personal Profile\n- Guild Memberships (${dataPackage.guild_memberships.length})\n- Consent Records (${dataPackage.consents.length})\n- Access Audit Trail (${dataPackage.audit_summary.total_accesses} entries)`,
-          false
+        .addFields(
+          {
+            name: 'Contents',
+            value: `- Personal Profile\n- Guild Memberships (${dataPackage.guild_memberships.length})\n- Consent Records (${dataPackage.consents.length})\n- Access Audit Trail (${dataPackage.audit_summary.total_accesses} entries)`,
+            inline: false
+          },
+          { name: 'Format', value: 'JSON (machine-readable, universally compatible)', inline: true },
+          { name: 'Size', value: `${(jsonData.length / 1024).toFixed(2)} KB`, inline: true },
+          { name: 'Generated At', value: dataPackage.exported_at.toISOString(), inline: false }
         )
-        .addField('Format', 'JSON (machine-readable, universally compatible)', true)
-        .addField('Size', `${(jsonData.length / 1024).toFixed(2)} KB`, true)
-        .addField('Generated At', dataPackage.exported_at.toISOString(), false)
-        .setFooter('This file contains all your data. Store it securely. Data valid for 30 days.');
+        .setFooter({ text: 'This file contains all your data. Store it securely. Data valid for 30 days.' });
 
       if (context instanceof Message) {
         // For message commands, send the embed and data file
@@ -89,8 +91,8 @@ export class GDPRDataExportCommand extends Command {
         .setColor(0x0099ff)
         .setTitle('❌ Error Exporting Your Data')
         .setDescription(error instanceof Error ? error.message : 'An unexpected error occurred')
-        .addField('What to do', 'If this error persists, please contact the bot administrator')
-        .setFooter('Request ID: ' + Date.now());
+        .addFields({ name: 'What to do', value: 'If this error persists, please contact the bot administrator', inline: false })
+        .setFooter({ text: 'Request ID: ' + Date.now() });
 
       if (context instanceof Message) {
         await context.reply({ embeds: [errorEmbed] });

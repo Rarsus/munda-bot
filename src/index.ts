@@ -7,6 +7,7 @@ import { SlashCommandManager } from './core/slashCommandManager';
 import { CommandRegistry } from './services/commandRegistry';
 import { GDPRService } from './services/gdpr';
 import { GDPRCleanupJob } from './jobs/GDPRCleanupJob';
+import { ActivityType } from 'discord.js';
 
 /**
  * Main bot initialization and startup
@@ -65,7 +66,7 @@ async function main(): Promise<void> {
 
       // Set bot status
       if (client.user) {
-        client.user.setActivity('Discord bot service', { type: 'WATCHING' });
+        client.user.setActivity('Discord bot service', { type: ActivityType.Watching });
       }
     });
 

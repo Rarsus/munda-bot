@@ -1,4 +1,4 @@
-import { Client, Collection, Permissions } from 'discord.js';
+import { Client, Collection, PermissionFlagsBits } from 'discord.js';
 import { SlashCommandBuilder } from '@discordjs/builders';
 import { logger } from '../services/logger';
 import { ICommand } from '../interfaces/ICommand';
@@ -97,7 +97,7 @@ export class SlashCommandManager {
 
             // Map permission names to Discord permission bits
             for (const perm of command.requiredPermissions) {
-              const permValue = (Permissions.FLAGS as any)[perm];
+              const permValue = (PermissionFlagsBits as any)[perm];
               if (permValue) {
                 permissions |= permValue;
               }

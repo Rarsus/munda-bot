@@ -78,15 +78,6 @@ export class SlashCommandManager {
 
     for (const [, command] of this.commands) {
       try {
-        // Skip commands with subcommands for now - manual configuration TBD
-        if (command.subcommands && command.subcommands.length > 0) {
-          logger.debug(`Skipping slash command for ${command.name} (has subcommands - WIP)`, {
-            service: 'SlashCommandManager',
-            subcommandCount: command.subcommands.length,
-          });
-          continue;
-        }
-
         // Create slash command builder
         const builder = new SlashCommandBuilder()
           .setName(command.name)
@@ -95,11 +86,11 @@ export class SlashCommandManager {
         // Set default member permissions if required
         if (command.requiredPermissions && command.requiredPermissions.length > 0) {
           const builderAny = builder as unknown as {
-            setDefaultMemberPermissions?: (perms: number) => unknown;
+            setDefaultMemberPermissions?: (perms: unknown) => unknown;
           };
 
           if (builderAny.setDefaultMemberPermissions) {
-            let permissions = 0;
+            let permissions = BigInt(0);
 
             // Map permission names to Discord permission bits
             for (const perm of command.requiredPermissions) {
@@ -109,40 +100,64 @@ export class SlashCommandManager {
               }
             }
 
-            if (permissions > 0) {
+            if (permissions > BigInt(0)) {
               builderAny.setDefaultMemberPermissions(permissions);
             }
 
-            logger.debug(`Set permissions for ${command.name}: ${permissions}`, {
+            logger.debug(`Set permissions for ${command.name}: ${permissions.toString()}`, {
               service: 'SlashCommandManager',
             });
           }
         }
 
-        // Add optional string option for simple commands with arguments
-        if (command.usage && command.usage.includes('[')) {
-          const match = command.usage.match(/\[([^\]]+)\]/);
-          if (match) {
-            const optionName = match[1];
+        // Handle subcommands if present
+        if (command.subcommands && command.subcommands.length > 0) {
+          const builderAny = builder as unknown as {
+            addSubcommand: (fn: (sub: unknown) => unknown) => unknown;
+          };
 
-            if (optionName.length <= 32 && /^[a-z0-9_-]+$/i.test(optionName)) {
-              const builderAny = builder as unknown as {
-                addStringOption: (fn: unknown) => unknown;
+          for (const subcommand of command.subcommands) {
+            builderAny.addSubcommand((sub: unknown) => {
+              const subAny = sub as unknown as {
+                setName: (n: string) => unknown;
+                setDescription: (d: string) => unknown;
               };
+              subAny.setName(subcommand.name);
+              subAny.setDescription(subcommand.description || 'No description provided');
+              return sub;
+            });
+          }
 
-              builderAny.addStringOption((option: unknown) => {
-                const optAny = option as unknown as {
-                  setName: (n: string) => unknown;
-                  setDescription: (d: string) => unknown;
-                  setRequired?: (r: boolean) => unknown;
+          logger.debug(`Built slash command ${command.name} with ${command.subcommands.length} subcommands`, {
+            service: 'SlashCommandManager',
+            subcommands: command.subcommands.map((s) => s.name),
+          });
+        } else {
+          // Add optional string option for simple commands with arguments
+          if (command.usage && command.usage.includes('[')) {
+            const match = command.usage.match(/\[([^\]]+)\]/);
+            if (match) {
+              const optionName = match[1];
+
+              if (optionName.length <= 32 && /^[a-z0-9_-]+$/i.test(optionName)) {
+                const builderAny = builder as unknown as {
+                  addStringOption: (fn: unknown) => unknown;
                 };
-                optAny.setName(optionName.toLowerCase());
-                optAny.setDescription(`${optionName} (optional)`);
-                if (optAny.setRequired) {
-                  optAny.setRequired(false);
-                }
-                return option;
-              });
+
+                builderAny.addStringOption((option: unknown) => {
+                  const optAny = option as unknown as {
+                    setName: (n: string) => unknown;
+                    setDescription: (d: string) => unknown;
+                    setRequired?: (r: boolean) => unknown;
+                  };
+                  optAny.setName(optionName.toLowerCase());
+                  optAny.setDescription(`${optionName} (optional)`);
+                  if (optAny.setRequired) {
+                    optAny.setRequired(false);
+                  }
+                  return option;
+                });
+              }
             }
           }
         }

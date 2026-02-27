@@ -1,4 +1,4 @@
-import { Client, Collection } from 'discord.js';
+import { Client, Collection, Permissions } from 'discord.js';
 import { SlashCommandBuilder } from '@discordjs/builders';
 import { logger } from '../services/logger';
 import { ICommand } from '../interfaces/ICommand';
@@ -82,6 +82,25 @@ export class SlashCommandManager {
         const builder = new SlashCommandBuilder()
           .setName(command.name)
           .setDescription(command.description || 'No description provided');
+
+        // Set default member permissions if required
+        if (command.requiredPermissions && command.requiredPermissions.length > 0) {
+          let permissions = 0;
+
+          // Map permission names to Discord permission bits
+          for (const perm of command.requiredPermissions) {
+            const permValue = (Permissions.FLAGS as any)[perm];
+            if (permValue) {
+              permissions |= permValue;
+            }
+          }
+
+          if (permissions > 0) {
+            (builder as unknown as {
+              setDefaultMemberPermissions: (perms: number) => unknown;
+            }).setDefaultMemberPermissions(permissions);
+          }
+        }
 
         // Add optional string option if command has arguments
         if (command.usage && command.usage.includes('[')) {

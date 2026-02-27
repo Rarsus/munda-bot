@@ -18,14 +18,14 @@ This project is configured for serverless deployment with:
 ```bash
 # 1. Authenticate with Google Cloud
 gcloud auth login
-gcloud config set project YOUR_PROJECT_ID
+gcloud config set project mundabot-oc
 
 # 2. Run deployment script
 chmod +x deploy-cloud-run.sh
 ./deploy-cloud-run.sh
 
 # 3. Follow the prompts to provide:
-#    - Project ID
+#    - Project ID: mundabot-oc (default, just press Enter)
 #    - Discord Bot Token
 #    - PostgreSQL password
 ```

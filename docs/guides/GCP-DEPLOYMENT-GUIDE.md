@@ -137,10 +137,10 @@ If you prefer to set up manually, follow these steps:
 ### 1. Set Active Project
 
 ```bash
-gcloud config set project YOUR_PROJECT_ID
+gcloud config set project mundabot-oc
 ```
 
-### 2. Enable Required APIs
+### Step 2: Enable Required APIs
 
 ```bash
 gcloud services enable \

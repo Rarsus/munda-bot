@@ -73,7 +73,7 @@ Your Discord bot is now fully configured for Google Cloud Run deployment in the 
 ### Step 1: Authenticate
 ```bash
 gcloud auth login
-gcloud config set project YOUR_GCP_PROJECT_ID
+gcloud config set project mundabot-oc
 ```
 
 ### Step 2: Run Deployment Script
@@ -83,9 +83,9 @@ chmod +x deploy-cloud-run.sh
 ```
 
 ### Step 3: Answer Prompts
-- Enter GCP Project ID
-- Provide Discord Bot Token (or use existing secret)
-- Provide PostgreSQL password
+- Project ID: mundabot-oc (default value, just press Enter)
+- Discord Bot Token
+- PostgreSQL password (16+ characters recommended)
 - Confirm configuration
 
 The script will automatically:
@@ -250,8 +250,7 @@ gcloud run services describe discord-bot --region=europe-west4 \
 
 Before running the deployment script, ensure:
 
-- [ ] Google Cloud Project created
-- [ ] Billing enabled on project
+- [ ] mundabot-oc project exists and billing enabled
 - [ ] gcloud CLI installed: `gcloud --version`
 - [ ] Docker installed: `docker --version`
 - [ ] Code tested locally: `npm run build`

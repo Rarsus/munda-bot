@@ -70,7 +70,8 @@ check_prerequisites() {
 collect_configuration() {
     echo -e "${BLUE}[2/8]${NC} Collecting configuration...\n"
     
-    read -p "$(echo -e "${YELLOW}Enter GCP Project ID:${NC} ")" PROJECT_ID
+    read -p "$(echo -e "${YELLOW}Enter GCP Project ID (default: mundabot-oc):${NC} ")" PROJECT_ID
+    PROJECT_ID=${PROJECT_ID:-mundabot-oc}
     
     if [ -z "$PROJECT_ID" ]; then
         echo -e "${RED}Error: Project ID cannot be empty${NC}"

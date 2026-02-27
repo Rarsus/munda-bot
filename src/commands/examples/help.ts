@@ -39,14 +39,14 @@ export class HelpCommand extends Command {
       const embed = new EmbedBuilder()
         .setTitle(`📚 Help: ${command.name}`)
         .setDescription(command.description)
-        .setColor(0x);
+        .setColor(0x0099ff);
 
       if (command.usage) {
-        embed.addField('Usage', `\`!${command.usage}\``);
+        embed.addFields({name: 'Usage', value: `\`!${command.usage}\``});
       }
 
       if (command.aliases && command.aliases.length > 0) {
-        embed.addField('Aliases', command.aliases.map((a) => `\`${a}\``).join(', '));
+        embed.addFields({name: 'Aliases', value: command.aliases.map((a) => `\`${a}\``).join(', ')});
       }
 
       if (command.examples && command.examples.length > 0) {
@@ -65,8 +65,8 @@ export class HelpCommand extends Command {
       const embed = new EmbedBuilder()
         .setTitle('📚 Available Commands')
         .setDescription(commandList || 'No commands available')
-        .setColor(0x)
-        .setFooter(`Use !help [command] for more info on a specific command`);
+        .setColor(0x0099ff)
+        .setFooter({text: `Use !help [command] for more info on a specific command`});
 
       if (context instanceof Message) {
         await context.reply({ embeds: [embed] });

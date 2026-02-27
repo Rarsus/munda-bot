@@ -8,7 +8,7 @@ export function createSuccessEmbed(title: string, description?: string): Message
   return new EmbedBuilder()
     .setTitle(`✅ ${title}`)
     .setDescription(description || '')
-    .setColor(0x)
+    .setColor(0x0099ff)
     .setTimestamp();
 }
 
@@ -19,7 +19,7 @@ export function createErrorEmbed(title: string, description?: string): MessageEm
   return new EmbedBuilder()
     .setTitle(`❌ ${title}`)
     .setDescription(description || '')
-    .setColor(0x)
+    .setColor(0x0099ff)
     .setTimestamp();
 }
 
@@ -30,7 +30,7 @@ export function createInfoEmbed(title: string, description?: string): MessageEmb
   return new EmbedBuilder()
     .setTitle(`ℹ️ ${title}`)
     .setDescription(description || '')
-    .setColor(0x)
+    .setColor(0x0099ff)
     .setTimestamp();
 }
 
@@ -41,7 +41,7 @@ export function createUserEmbed(user: User): MessageEmbed {
   return new EmbedBuilder()
     .setTitle(`👤 ${user.username}`)
     .setDescription(`ID: ${user.id}`)
-    .setColor(0x)
+    .setColor(0x0099ff)
     .setThumbnail(user.avatarURL({ size: 256 }) || '')
     .setTimestamp();
 }

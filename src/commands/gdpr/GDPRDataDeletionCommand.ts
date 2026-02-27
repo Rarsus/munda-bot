@@ -47,7 +47,7 @@ export class GDPRDataDeletionCommand extends Command {
 
       // Create confirmation embed
       const confirmEmbed = new EmbedBuilder()
-        .setColor(0x)
+        .setColor(0x0099ff)
         .setTitle('⚠️ Data Deletion Request Initiated')
         .setDescription('Your request to delete all personal data has been submitted.')
         .addField('Request ID', erasureRequest.id, false)
@@ -75,7 +75,7 @@ export class GDPRDataDeletionCommand extends Command {
 
       // Send follow-up with next steps
       const nextStepsEmbed = new EmbedBuilder()
-        .setColor(0x)
+        .setColor(0x0099ff)
         .setTitle('📋 Next Steps')
         .setDescription("Your deletion request has been queued. Here's what happens next:")
         .addField('1. Review', 'Our team will review your request (usually within 24 hours)', false)
@@ -100,7 +100,7 @@ export class GDPRDataDeletionCommand extends Command {
       logger.error(`Error in GDPRDataDeletionCommand for user ${userId}:`, error);
 
       const errorEmbed = new EmbedBuilder()
-        .setColor(0x)
+        .setColor(0x0099ff)
         .setTitle('❌ Error Submitting Deletion Request')
         .setDescription(error instanceof Error ? error.message : 'An unexpected error occurred')
         .addField(

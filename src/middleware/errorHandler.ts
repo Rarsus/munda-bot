@@ -47,7 +47,7 @@ export async function handleError(
 
   // Send error message to user
   const errorEmbed = new EmbedBuilder()
-    .setColor(0x)
+    .setColor(0x0099ff)
     .setTitle('❌ Command Error')
     .setDescription(appError.message)
     .addField('Error Code', appError.code)

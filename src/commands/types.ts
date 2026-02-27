@@ -27,7 +27,7 @@ export function createCommandHelpEmbed(command: Command): MessageEmbed {
   const embed = new EmbedBuilder()
     .setTitle(`📚 Help: ${info.name}`)
     .setDescription(info.description)
-    .setColor(0x);
+    .setColor(0x0099ff);
 
   if (info.usage) {
     embed.addField('Usage', `!\`${info.usage}\``);

@@ -43,7 +43,7 @@ export class GDPRDataExportCommand extends Command {
 
       // Create embed
       const embed = new EmbedBuilder()
-        .setColor(0x)
+        .setColor(0x0099ff)
         .setTitle('✅ Data Export Created')
         .setDescription('Your complete data package has been generated and is ready for download.')
         .addField(
@@ -86,7 +86,7 @@ export class GDPRDataExportCommand extends Command {
       logger.error(`Error in GDPRDataExportCommand for user ${userId}:`, error);
 
       const errorEmbed = new EmbedBuilder()
-        .setColor(0x)
+        .setColor(0x0099ff)
         .setTitle('❌ Error Exporting Your Data')
         .setDescription(error instanceof Error ? error.message : 'An unexpected error occurred')
         .addField('What to do', 'If this error persists, please contact the bot administrator')

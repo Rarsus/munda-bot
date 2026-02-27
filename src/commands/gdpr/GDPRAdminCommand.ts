@@ -40,7 +40,7 @@ export class GDPRAdminCommand extends Command {
 
     if (!isAdmin) {
       const errorEmbed = new EmbedBuilder()
-        .setColor(0x)
+        .setColor(0x0099ff)
         .setTitle('❌ Permission Denied')
         .setDescription('Only administrators can use this command')
         .setFooter('Required permission: ADMINISTRATOR');
@@ -91,7 +91,7 @@ export class GDPRAdminCommand extends Command {
           break;
         default:
           const helpEmbed = new EmbedBuilder()
-            .setColor(0x)
+            .setColor(0x0099ff)
             .setTitle('📖 GDPR Admin Commands')
             .addField('list', 'Show all pending deletion requests', false)
             .addField('approve <request-id>', 'Approve a deletion request', false)
@@ -109,7 +109,7 @@ export class GDPRAdminCommand extends Command {
       logger.error(`Error in GDPRAdminCommand for admin ${userId}:`, error);
 
       const errorEmbed = new EmbedBuilder()
-        .setColor(0x)
+        .setColor(0x0099ff)
         .setTitle('❌ Error')
         .setDescription('An error occurred processing your request')
         .setFooter('Check logs for details');
@@ -127,7 +127,7 @@ export class GDPRAdminCommand extends Command {
 
     if (requests.length === 0) {
       const embed = new EmbedBuilder()
-        .setColor(0x)
+        .setColor(0x0099ff)
         .setTitle('✅ No Pending Requests')
         .setDescription('All deletion requests have been processed')
         .setFooter('Last updated: ' + new Date().toISOString());
@@ -142,7 +142,7 @@ export class GDPRAdminCommand extends Command {
     }
 
     const embed = new EmbedBuilder()
-      .setColor(0x)
+      .setColor(0x0099ff)
       .setTitle(`⏳ Pending Deletion Requests (${requests.length})`)
       .setDescription('Use `/gdpr-admin approve|deny|execute|restore <request-id>` to manage');
 
@@ -183,7 +183,7 @@ export class GDPRAdminCommand extends Command {
   ): Promise<void> {
     if (!requestId) {
       const embed = new EmbedBuilder()
-        .setColor(0x)
+        .setColor(0x0099ff)
         .setTitle('❌ Missing Request ID')
         .setDescription('Usage: `/gdpr-admin approve <request-id>`');
 
@@ -198,7 +198,7 @@ export class GDPRAdminCommand extends Command {
     const result = await this.gdprService.approveErasureRequest(requestId, adminId);
 
     const embed = new EmbedBuilder()
-      .setColor(0x)
+      .setColor(0x0099ff)
       .setTitle('✅ Deletion Request Approved')
       .addField('Request ID', result.id, false)
       .addField('User', result.user_id, false)
@@ -230,7 +230,7 @@ export class GDPRAdminCommand extends Command {
   ): Promise<void> {
     if (!requestId) {
       const embed = new EmbedBuilder()
-        .setColor(0x)
+        .setColor(0x0099ff)
         .setTitle('❌ Missing Request ID')
         .setDescription('Usage: `/gdpr-admin deny <request-id> [reason]`');
 
@@ -245,7 +245,7 @@ export class GDPRAdminCommand extends Command {
     const result = await this.gdprService.denyErasureRequest(requestId, adminId, reason);
 
     const embed = new EmbedBuilder()
-      .setColor(0x)
+      .setColor(0x0099ff)
       .setTitle('❌ Deletion Request Denied')
       .addField('Request ID', result.id, false)
       .addField('User', result.user_id, false);
@@ -279,7 +279,7 @@ export class GDPRAdminCommand extends Command {
   ): Promise<void> {
     if (!requestId) {
       const embed = new EmbedBuilder()
-        .setColor(0x)
+        .setColor(0x0099ff)
         .setTitle('❌ Missing Request ID')
         .setDescription('Usage: `/gdpr-admin execute <request-id>`');
 
@@ -294,7 +294,7 @@ export class GDPRAdminCommand extends Command {
     const result = await this.gdprService.executeErasure(requestId, adminId);
 
     const embed = new EmbedBuilder()
-      .setColor(0x)
+      .setColor(0x0099ff)
       .setTitle('🗑️ Data Deletion Executed')
       .addField('Request ID', result.request_id, false)
       .addField('User', result.user_id, false)
@@ -326,7 +326,7 @@ export class GDPRAdminCommand extends Command {
   ): Promise<void> {
     if (!requestId) {
       const embed = new EmbedBuilder()
-        .setColor(0x)
+        .setColor(0x0099ff)
         .setTitle('❌ Missing Request ID')
         .setDescription('Usage: `/gdpr-admin restore <request-id> [reason]`');
 
@@ -341,7 +341,7 @@ export class GDPRAdminCommand extends Command {
     const result = await this.gdprService.restoreErasureRequest(requestId, adminId, reason);
 
     const embed = new EmbedBuilder()
-      .setColor(0x)
+      .setColor(0x0099ff)
       .setTitle('💾 Deletion Request Restored')
       .addField('Request ID', result.id, false)
       .addField('User', result.user_id, false)

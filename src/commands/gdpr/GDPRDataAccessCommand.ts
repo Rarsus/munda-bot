@@ -40,7 +40,7 @@ export class GDPRDataAccessCommand extends Command {
 
       if (!userData) {
         const embed = new EmbedBuilder()
-          .setColor(0x)
+          .setColor(0x0099ff)
           .setTitle('⚠️ No Data Found')
           .setDescription("We don't have any data stored for you in our system.")
           .setFooter('Data: ' + new Date().toISOString());
@@ -64,7 +64,7 @@ export class GDPRDataAccessCommand extends Command {
 
       // Create data summary embed
       const embed = new EmbedBuilder()
-        .setColor(0x)
+        .setColor(0x0099ff)
         .setTitle('📋 Your Personal Data Summary')
         .addField('Discord ID', userData.user_id, false)
         .addField('Username', userData.username, true)
@@ -88,7 +88,7 @@ export class GDPRDataAccessCommand extends Command {
       logger.error(`Error in GDPRDataAccessCommand for user ${userId}:`, error);
 
       const errorEmbed = new EmbedBuilder()
-        .setColor(0x)
+        .setColor(0x0099ff)
         .setTitle('❌ Error Retrieving Your Data')
         .setDescription(error instanceof Error ? error.message : 'An unexpected error occurred')
         .setFooter('If this persists, please contact support');

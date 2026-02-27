@@ -39,7 +39,7 @@ export class GDPRStatusCommand extends Command {
 
       if (!requestId) {
         const errorEmbed = new EmbedBuilder()
-          .setColor(0x)
+          .setColor(0x0099ff)
           .setTitle('❌ Missing Request ID')
           .setDescription('Please provide your deletion request ID')
           .addField('Usage', '`/gdprstatus <request-id>`', false)
@@ -59,7 +59,7 @@ export class GDPRStatusCommand extends Command {
 
       if (!status) {
         const notFoundEmbed = new EmbedBuilder()
-          .setColor(0x)
+          .setColor(0x0099ff)
           .setTitle('⚠️ Request Not Found')
           .setDescription(`No deletion request found with ID: ${requestId}`)
           .addField('What to do', 'Double-check the request ID and try again', false)
@@ -86,7 +86,7 @@ export class GDPRStatusCommand extends Command {
       // Verify ownership
       if (status.user_id !== userId) {
         const unauthorizedEmbed = new EmbedBuilder()
-          .setColor(0x)
+          .setColor(0x0099ff)
           .setTitle('❌ Unauthorized')
           .setDescription('You can only view your own deletion requests')
           .setFooter('If you need help, contact support');
@@ -168,7 +168,7 @@ export class GDPRStatusCommand extends Command {
       logger.error(`Error in GDPRStatusCommand for user ${userId}:`, error);
 
       const errorEmbed = new EmbedBuilder()
-        .setColor(0x)
+        .setColor(0x0099ff)
         .setTitle('❌ Error Checking Status')
         .setDescription('An error occurred while checking your request status')
         .setFooter('Please try again in a moment');

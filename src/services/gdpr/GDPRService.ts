@@ -46,18 +46,26 @@ export class GDPRService {
    */
   async getUserData(userId: string): Promise<IGDPRUserData | null> {
     try {
-      const userData = await this.userDataRepository.getUserById(userId);
+      let userData = await this.userDataRepository.getUserById(userId);
 
-      if (userData) {
-        // Audit log the access
-        await this.auditRepository.logEvent({
-          event_type: AuditEventType.USER_DATA_ACCESSED,
-          subject_user_id: userId,
-          resource_type: 'user',
-          resource_id: userId,
-          action: 'User accessed their own data',
+      // If user doesn't exist, create a minimal record
+      // This ensures subsequent GDPR operations don't fail on foreign key constraints
+      if (!userData) {
+        userData = await this.userDataRepository.createUser({
+          user_id: userId,
+          username: `User_${userId.substring(0, 8)}`, // Placeholder username
+          discriminator: '',
         });
       }
+
+      // Audit log the access
+      await this.auditRepository.logEvent({
+        event_type: AuditEventType.USER_DATA_ACCESSED,
+        subject_user_id: userId,
+        resource_type: 'user',
+        resource_id: userId,
+        action: 'User accessed their own data',
+      });
 
       return userData;
     } catch (error) {
@@ -94,15 +102,21 @@ export class GDPRService {
    */
   async getDataPortabilityPackage(userId: string): Promise<IGDPRDataPortablePackage> {
     try {
+      // Ensure user exists in the database
+      let userData = await this.userDataRepository.getUserById(userId);
+      if (!userData) {
+        // Create a minimal user record if they don't exist
+        userData = await this.userDataRepository.createUser({
+          user_id: userId,
+          username: `User_${userId.substring(0, 8)}`, // Placeholder username
+          discriminator: '',
+        });
+      }
+
       // Gather all user data
-      const userData = await this.userDataRepository.getUserById(userId);
       const memberships = await this.memberDataRepository.getUserGuildMemberships(userId);
       const consents = await this.consentRepository.getUserConsents(userId);
       const auditLogs = await this.auditRepository.exportUserAuditTrail(userId);
-
-      if (!userData) {
-        throw new Error(`User ${userId} not found`);
-      }
 
       // Audit log the export request
       await this.auditRepository.logEvent({
@@ -168,6 +182,18 @@ export class GDPRService {
    */
   async requestErasure(userId: string, reason?: string): Promise<any> {
     try {
+      // Ensure user exists in the database before creating erasure request
+      const existingUser = await this.userDataRepository.getUserById(userId);
+      if (!existingUser) {
+        // Create a minimal user record if they don't exist
+        // This is necessary because gdpr_erasure_request has a foreign key constraint
+        await this.userDataRepository.createUser({
+          user_id: userId,
+          username: `User_${userId.substring(0, 8)}`, // Placeholder username
+          discriminator: '',
+        });
+      }
+
       const request = await this.erasureRepository.createErasureRequest({
         user_id: userId,
         reason,

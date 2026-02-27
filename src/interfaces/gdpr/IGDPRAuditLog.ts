@@ -28,6 +28,9 @@ export enum AuditEventType {
 
   // Erasure
   ERASURE_REQUESTED = 'erasure_requested',
+  ERASURE_APPROVED = 'erasure_approved',
+  ERASURE_DENIED = 'erasure_denied',
+  ERASURE_RESTORED = 'erasure_restored',
   ERASURE_COMPLETED = 'erasure_completed',
 }
 
@@ -43,8 +46,8 @@ export interface IGDPRAuditLog {
   requesting_user_id?: string; // Admin who accessed it
 
   // WHAT: Data scope
-  resource_type: 'user' | 'member' | 'guild';
-  resource_id: string; // user_id, member_id, or guild_id
+  resource_type: 'user' | 'member' | 'guild' | 'erasure_request';
+  resource_id: string; // user_id, member_id, guild_id, or erasure_request_id
   guild_id?: string; // If member or guild resource
 
   // HOW: Details
@@ -67,7 +70,7 @@ export interface IGDPRAuditLogInput {
   event_type: AuditEventType;
   subject_user_id?: string;
   requesting_user_id?: string;
-  resource_type: 'user' | 'member' | 'guild';
+  resource_type: 'user' | 'member' | 'guild' | 'erasure_request';
   resource_id: string;
   guild_id?: string;
   action: string;

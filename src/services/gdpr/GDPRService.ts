@@ -13,7 +13,6 @@ import {
   IGDPRGuildMemberData,
   IGDPRConsent,
   IGDPRDataPortablePackage,
-  IGDPRErasureCompletionReport,
   ConsentType,
   AuditEventType,
 } from '../../interfaces/gdpr';
@@ -220,114 +219,6 @@ export class GDPRService {
   }
 
   /**
-   * Execute data erasure
-   * Permanently deletes user data after validation
-   */
-  async executeErasure(
-    erasureRequestId: string,
-    approvedBy?: string
-  ): Promise<IGDPRErasureCompletionReport> {
-    const client = await (this.auditRepository as any).pool.connect();
-
-    try {
-      await client.query('BEGIN');
-
-      const erasureRequest = (await (this.erasureRepository as any).getRequest(
-        erasureRequestId
-      )) as any;
-
-      if (!erasureRequest) {
-        throw new Error(`Erasure request ${erasureRequestId} not found`);
-      }
-
-      let deletionCount = 0;
-      const deletionSummary = {
-        user_data: 0,
-        guild_memberships: 0,
-        consent_records: 0,
-        audit_logs_retained: 0,
-      };
-
-      const userId = (erasureRequest as any).user_id;
-
-      // Update erasure status
-      await this.erasureRepository.updateErasureStatus(erasureRequestId, 'in_progress');
-
-      // Delete user data
-      if (erasureRequest.delete_user_data) {
-        await this.userDataRepository.permanentlyDeleteUser(userId);
-        deletionSummary.user_data = 1;
-        deletionCount++;
-      }
-
-      // Delete guild memberships
-      if (erasureRequest.delete_guild_memberships) {
-        const count = await this.memberDataRepository.deleteUserFromAllGuilds(userId);
-        deletionSummary.guild_memberships = count;
-        deletionCount += count;
-      }
-
-      // Withdraw consents (never delete for audit)
-      if (erasureRequest.delete_consents) {
-        const count = await this.consentRepository.withdrawAllConsents(userId);
-        deletionSummary.consent_records = count;
-        deletionCount += count;
-      }
-
-      // Audit logs are NEVER deleted (legal requirement)
-      const auditLogs = await this.auditRepository.getUserAuditLogs(userId);
-      deletionSummary.audit_logs_retained = auditLogs.length;
-
-      // Log erasure completion
-      await this.auditRepository.logEvent({
-        event_type: AuditEventType.ERASURE_COMPLETED,
-        subject_user_id: userId,
-        requesting_user_id: approvedBy,
-        resource_type: 'user',
-        resource_id: userId,
-        action: `Data erasure completed - ${deletionCount} records deleted`,
-      });
-
-      // Mark erasure as completed
-      await this.erasureRepository.updateErasureStatus(
-        erasureRequestId,
-        'completed',
-        deletionCount
-      );
-
-      await client.query('COMMIT');
-
-      const report: IGDPRErasureCompletionReport = {
-        erasure_request_id: erasureRequestId,
-        user_id: userId,
-        completed_at: new Date(),
-        items_deleted: deletionSummary,
-        summary: `Successfully erased ${deletionCount} data items for user ${userId}`,
-        certificate_hash: Buffer.from(
-          JSON.stringify({
-            erasure_id: erasureRequestId,
-            user_id: userId,
-            completed_at: new Date(),
-            deletions: deletionSummary,
-          })
-        ).toString('hex'),
-      };
-
-      return report;
-    } catch (error) {
-      await client.query('ROLLBACK');
-      logger.error(`Error executing erasure ${erasureRequestId}:`, error);
-
-      // Mark as failed
-      await this.erasureRepository.updateErasureStatus(erasureRequestId, 'failed');
-
-      throw error;
-    } finally {
-      client.release();
-    }
-  }
-
-  /**
    * Check user consent
    */
   async hasConsent(userId: string, consentType: ConsentType): Promise<boolean> {
@@ -400,6 +291,263 @@ export class GDPRService {
     } catch (error) {
       logger.error(`Error withdrawing consent for user ${userId}:`, error);
       throw error;
+    }
+  }
+
+  /**
+   * Get erasure request status
+   */
+  async getErasureRequestStatus(requestId: string): Promise<any | null> {
+    try {
+      return await this.erasureRepository.getErasureRequestById(requestId);
+    } catch (error) {
+      logger.error(`Error getting erasure request status for ${requestId}:`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get pending erasure requests
+   */
+  async getPendingErasureRequests(): Promise<any[]> {
+    try {
+      return await this.erasureRepository.getPendingErasureRequests();
+    } catch (error) {
+      logger.error(`Error getting pending erasure requests:`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * Approve erasure request (admin action)
+   */
+  async approveErasureRequest(requestId: string, adminId: string): Promise<any> {
+    try {
+      const request = await this.erasureRepository.approveErasureRequest(requestId, adminId);
+
+      // Audit log
+      await this.auditRepository.logEvent({
+        event_type: AuditEventType.ERASURE_APPROVED,
+        subject_user_id: request.user_id,
+        requesting_user_id: adminId,
+        resource_type: 'erasure_request',
+        resource_id: requestId,
+        action: `Admin ${adminId} approved deletion request`,
+      });
+
+      return request;
+    } catch (error) {
+      logger.error(`Error approving erasure request ${requestId}:`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * Deny erasure request (admin action)
+   */
+  async denyErasureRequest(requestId: string, adminId: string, reason?: string): Promise<any> {
+    try {
+      const request = await this.erasureRepository.denyErasureRequest(requestId, adminId, reason);
+
+      // Audit log
+      await this.auditRepository.logEvent({
+        event_type: AuditEventType.ERASURE_DENIED,
+        subject_user_id: request.user_id,
+        requesting_user_id: adminId,
+        resource_type: 'erasure_request',
+        resource_id: requestId,
+        action: `Admin ${adminId} denied deletion request: ${reason || 'No reason provided'}`,
+      });
+
+      return request;
+    } catch (error) {
+      logger.error(`Error denying erasure request ${requestId}:`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * Execute data erasure (admin action)
+   * Permanently deletes user data from all tables
+   */
+  async executeErasure(requestId: string, adminId: string): Promise<any> {
+    const client = await (this.userDataRepository as any).pool.connect();
+
+    try {
+      await client.query('BEGIN');
+
+      // Get request details
+      const request = await this.erasureRepository.getErasureRequestById(requestId);
+      if (!request) {
+        throw new Error(`Erasure request ${requestId} not found`);
+      }
+
+      const userId = request.user_id;
+
+      // Delete user data if requested
+      if (request.delete_user_data) {
+        await client.query('DELETE FROM gdpr_user_data WHERE user_id = $1', [userId]);
+      }
+
+      // Delete guild member data if requested
+      if (request.delete_guild_memberships) {
+        await client.query('DELETE FROM gdpr_guild_member_data WHERE user_id = $1', [userId]);
+      }
+
+      // Delete consent records if requested
+      if (request.delete_consents) {
+        await client.query('DELETE FROM gdpr_consent WHERE user_id = $1', [userId]);
+      }
+
+      // Delete audit logs if requested (with confirmation)
+      if (request.delete_audit_logs) {
+        await client.query(
+          'UPDATE gdpr_audit_log SET archived = true WHERE subject_user_id = $1',
+          [userId]
+        );
+      }
+
+      // Mark erasure request as completed
+      await this.erasureRepository.completeErasure(requestId);
+
+      await client.query('COMMIT');
+
+      // Audit log
+      await this.auditRepository.logEvent({
+        event_type: AuditEventType.ERASURE_COMPLETED,
+        subject_user_id: userId,
+        requesting_user_id: adminId,
+        resource_type: 'erasure_request',
+        resource_id: requestId,
+        action: `Admin ${adminId} executed data deletion for user ${userId}`,
+      });
+
+      return request;
+    } catch (error) {
+      await client.query('ROLLBACK');
+      logger.error(`Error executing erasure for request ${requestId}:`, error);
+      throw error;
+    } finally {
+      client.release();
+    }
+  }
+
+  /**
+   * Restore erasure request (admin action)
+   * Usable before 30 days pass and deletion is executed
+   */
+  async restoreErasureRequest(requestId: string, adminId: string, reason?: string): Promise<any> {
+    try {
+      const request = await this.erasureRepository.restoreErasureRequest(requestId, adminId, reason);
+
+      // Audit log
+      await this.auditRepository.logEvent({
+        event_type: AuditEventType.ERASURE_RESTORED,
+        subject_user_id: request.user_id,
+        requesting_user_id: adminId,
+        resource_type: 'erasure_request',
+        resource_id: requestId,
+        action: `Admin ${adminId} restored deletion request: ${reason || 'No reason provided'}`,
+      });
+
+      return request;
+    } catch (error) {
+      logger.error(`Error restoring erasure request ${requestId}:`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * Auto-cleanup expired erasure requests
+   * Run this as a background job to automatically delete data after 30 days
+   */
+  async autoCleanupExpiredRequests(): Promise<number> {
+    const client = await (this.userDataRepository as any).pool.connect();
+
+    let deletedCount = 0;
+
+    try {
+      // Get all approved requests that are ready for deletion
+      const readyForDeletion = await this.erasureRepository.getReadyForDeletion();
+
+      for (const request of readyForDeletion) {
+        try {
+          await client.query('BEGIN');
+
+          const userId = request.user_id;
+
+          // Delete user data
+          if (request.delete_user_data) {
+            await client.query('DELETE FROM gdpr_user_data WHERE user_id = $1', [userId]);
+          }
+
+          // Delete guild member data
+          if (request.delete_guild_memberships) {
+            await client.query('DELETE FROM gdpr_guild_member_data WHERE user_id = $1', [userId]);
+          }
+
+          // Delete consent records
+          if (request.delete_consents) {
+            await client.query('DELETE FROM gdpr_consent WHERE user_id = $1', [userId]);
+          }
+
+          // Archive audit logs if requested
+          if (request.delete_audit_logs) {
+            await client.query(
+              'UPDATE gdpr_audit_log SET archived = true WHERE subject_user_id = $1',
+              [userId]
+            );
+          }
+
+          // Mark erasure request as completed
+          await this.erasureRepository.completeErasure(request.id);
+
+          await client.query('COMMIT');
+
+          // Audit log for automatic cleanup
+          await this.auditRepository.logEvent({
+            event_type: AuditEventType.ERASURE_COMPLETED,
+            subject_user_id: userId,
+            resource_type: 'erasure_request',
+            resource_id: request.id,
+            action: `Automatic cleanup: Data deletion executed after 30-day approval period`,
+          });
+
+          deletedCount++;
+          logger.info(`Auto-cleanup: Deleted data for user ${userId} (request ${request.id})`);
+        } catch (error) {
+          await client.query('ROLLBACK');
+          logger.error(
+            `Error auto-cleaning up erasure request ${request.id}:`,
+            error
+          );
+        }
+      }
+
+      return deletedCount;
+    } catch (error) {
+      logger.error(`Error in auto-cleanup of expired erasure requests:`, error);
+      throw error;
+    } finally {
+      client.release();
+    }
+  }
+
+  /**
+   * Log audit event
+   */
+  async logAuditEvent(event: {
+    event_type: AuditEventType | string;
+    subject_user_id?: string;
+    requesting_user_id?: string;
+    resource_type: string;
+    resource_id: string;
+    action: string;
+  }): Promise<void> {
+    try {
+      await this.auditRepository.logEvent(event as any);
+    } catch (error) {
+      logger.error(`Error logging audit event:`, error);
     }
   }
 

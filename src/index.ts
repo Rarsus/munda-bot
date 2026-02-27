@@ -1,10 +1,12 @@
 import { logger } from './services/logger';
 import { config, validateConfig } from './core/config';
-import { initializeDatabase, getDatabase, closeDatabase } from './services/database';
+import { initializeDatabase, getDatabase, getPool, closeDatabase } from './services/database';
 import { BotClient } from './core/client';
 import { CommandHandler } from './commands/handler';
 import { SlashCommandManager } from './core/slashCommandManager';
 import { CommandRegistry } from './services/commandRegistry';
+import { GDPRService } from './services/gdpr';
+import { GDPRCleanupJob } from './jobs/GDPRCleanupJob';
 
 /**
  * Main bot initialization and startup
@@ -38,6 +40,11 @@ async function main(): Promise<void> {
       service: 'Main',
       commands: Array.from(commands.keys()),
     });
+
+    // Initialize GDPR cleanup job
+    const gdprService = new GDPRService(getPool());
+    const cleanupJob = new GDPRCleanupJob(gdprService);
+    cleanupJob.start();
 
     // Create command handler
     const commandHandler = new CommandHandler('!', client.commands, client.aliases);
@@ -182,6 +189,9 @@ async function main(): Promise<void> {
       logger.info(`Received ${signal}, shutting down gracefully...`, {
         service: 'Process',
       });
+
+      // Stop cleanup job
+      cleanupJob.stop();
 
       client.destroy();
       await closeDatabase();

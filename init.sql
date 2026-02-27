@@ -170,13 +170,24 @@ CREATE TABLE IF NOT EXISTS gdpr_erasure_request (
     delete_guild_memberships BOOLEAN DEFAULT TRUE,
     delete_consents BOOLEAN DEFAULT TRUE,
     delete_audit_logs BOOLEAN DEFAULT FALSE,
-    requested_at TIMESTAMP,
+    requested_at TIMESTAMP NOT NULL DEFAULT NOW(),
+    approved_at TIMESTAMP,
+    approved_by VARCHAR(255),
+    denied_at TIMESTAMP,
+    denied_by VARCHAR(255),
+    denied_reason TEXT,
     completed_at TIMESTAMP,
+    restored_at TIMESTAMP,
+    restored_by VARCHAR(255),
+    restore_reason TEXT,
+    expires_at TIMESTAMP DEFAULT (NOW() + INTERVAL '30 days'),
     created_at TIMESTAMP DEFAULT NOW(),
     updated_at TIMESTAMP DEFAULT NOW(),
     FOREIGN KEY(user_id) REFERENCES gdpr_user_data(user_id) ON DELETE CASCADE
 );
 
 CREATE INDEX IF NOT EXISTS idx_gdpr_erasure_request_user_id ON gdpr_erasure_request(user_id);
+CREATE INDEX IF NOT EXISTS idx_gdpr_erasure_request_status ON gdpr_erasure_request(status);
+CREATE INDEX IF NOT EXISTS idx_gdpr_erasure_request_expires_at ON gdpr_erasure_request(expires_at);
 CREATE INDEX IF NOT EXISTS idx_gdpr_erasure_request_status ON gdpr_erasure_request(status);
 CREATE INDEX IF NOT EXISTS idx_gdpr_erasure_request_requested_at ON gdpr_erasure_request(requested_at);

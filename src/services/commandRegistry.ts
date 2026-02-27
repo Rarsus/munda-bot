@@ -9,6 +9,8 @@ import { HelpCommand } from '../commands/examples/help';
 import { GDPRDataAccessCommand } from '../commands/gdpr/GDPRDataAccessCommand';
 import { GDPRDataExportCommand } from '../commands/gdpr/GDPRDataExportCommand';
 import { GDPRDataDeletionCommand } from '../commands/gdpr/GDPRDataDeletionCommand';
+import { GDPRStatusCommand } from '../commands/gdpr/GDPRStatusCommand';
+import { GDPRAdminCommand } from '../commands/gdpr/GDPRAdminCommand';
 
 // Import services
 import { GDPRService } from '../services/gdpr';
@@ -39,6 +41,8 @@ export class CommandRegistry {
       this.registerCommand(new GDPRDataAccessCommand(gdprService));
       this.registerCommand(new GDPRDataExportCommand(gdprService));
       this.registerCommand(new GDPRDataDeletionCommand(gdprService));
+      this.registerCommand(new GDPRStatusCommand(gdprService));
+      this.registerCommand(new GDPRAdminCommand(gdprService));
 
       logger.info('CommandRegistry initialized', {
         service: 'CommandRegistry',

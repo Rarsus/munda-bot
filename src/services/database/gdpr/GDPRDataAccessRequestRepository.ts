@@ -165,7 +165,23 @@ export class GDPRErasureRequestRepository extends BaseRepository<IGDPRErasureReq
   }
 
   /**
-   * Get erasure requests for user
+   * Get erasure request by ID
+   */
+  async getErasureRequestById(requestId: string): Promise<IGDPRErasureRequest | null> {
+    try {
+      const result = await this.query(
+        `SELECT * FROM ${this.tableName} WHERE id = $1`,
+        [requestId]
+      );
+      return result.rows[0] || null;
+    } catch (error) {
+      logger.error(`Error getting erasure request ${requestId}:`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get all erasure requests for user
    */
   async getUserErasureRequests(userId: string): Promise<IGDPRErasureRequest[]> {
     try {
@@ -196,41 +212,16 @@ export class GDPRErasureRequestRepository extends BaseRepository<IGDPRErasureReq
   }
 
   /**
-   * Update erasure request status
+   * Get approved erasure requests that are ready for deletion (30 days old)
    */
-  async updateErasureStatus(
-    requestId: string,
-    status: string,
-    deletionsCount?: number
-  ): Promise<IGDPRErasureRequest> {
+  async getReadyForDeletion(): Promise<IGDPRErasureRequest[]> {
     try {
-      const updates = ['status = $1', 'updated_at = NOW()'];
-      const values: any[] = [status];
-      let paramIndex = 2;
-
-      if (deletionsCount !== undefined) {
-        updates.push(`deletions_count = $${paramIndex++}`);
-        values.push(deletionsCount);
-      }
-
-      if (status === 'completed') {
-        updates.push(`completed_at = NOW()`);
-      }
-
-      values.push(requestId);
-
       const result = await this.query(
-        `UPDATE ${this.tableName} SET ${updates.join(', ')} WHERE id = $${paramIndex} RETURNING *`,
-        values
+        `SELECT * FROM ${this.tableName} WHERE status = 'approved' AND expires_at <= NOW() ORDER BY expires_at ASC`
       );
-
-      if (!result.rows[0]) {
-        throw new Error(`Erasure request ${requestId} not found`);
-      }
-
-      return result.rows[0];
+      return result.rows;
     } catch (error) {
-      logger.error(`Error updating erasure request ${requestId}:`, error);
+      logger.error(`Error getting erasure requests ready for deletion:`, error);
       throw error;
     }
   }
@@ -241,7 +232,7 @@ export class GDPRErasureRequestRepository extends BaseRepository<IGDPRErasureReq
   async approveErasureRequest(requestId: string, approvedBy: string): Promise<IGDPRErasureRequest> {
     try {
       const result = await this.query(
-        `UPDATE ${this.tableName} SET status = 'approved', approved_by = $1, approved_at = NOW(), updated_at = NOW() WHERE id = $2 RETURNING *`,
+        `UPDATE ${this.tableName} SET status = 'approved', approved_by = $1, approved_at = NOW(), expires_at = NOW() + INTERVAL '30 days', updated_at = NOW() WHERE id = $2 RETURNING *`,
         [approvedBy, requestId]
       );
 
@@ -252,6 +243,69 @@ export class GDPRErasureRequestRepository extends BaseRepository<IGDPRErasureReq
       return result.rows[0];
     } catch (error) {
       logger.error(`Error approving erasure request ${requestId}:`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * Deny erasure request
+   */
+  async denyErasureRequest(requestId: string, deniedBy: string, reason?: string): Promise<IGDPRErasureRequest> {
+    try {
+      const result = await this.query(
+        `UPDATE ${this.tableName} SET status = 'denied', denied_by = $1, denied_at = NOW(), denied_reason = $2, updated_at = NOW() WHERE id = $3 RETURNING *`,
+        [deniedBy, reason || null, requestId]
+      );
+
+      if (!result.rows[0]) {
+        throw new Error(`Erasure request ${requestId} not found`);
+      }
+
+      return result.rows[0];
+    } catch (error) {
+      logger.error(`Error denying erasure request ${requestId}:`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * Complete erasure request (data deleted)
+   */
+  async completeErasure(requestId: string): Promise<IGDPRErasureRequest> {
+    try {
+      const result = await this.query(
+        `UPDATE ${this.tableName} SET status = 'completed', completed_at = NOW(), updated_at = NOW() WHERE id = $1 RETURNING *`,
+        [requestId]
+      );
+
+      if (!result.rows[0]) {
+        throw new Error(`Erasure request ${requestId} not found`);
+      }
+
+      return result.rows[0];
+    } catch (error) {
+      logger.error(`Error completing erasure request ${requestId}:`, error);
+      throw error;
+    }
+  }
+
+  /**
+   * Restore erasure request (cancel pending deletion)
+   */
+  async restoreErasureRequest(requestId: string, restoredBy: string, reason?: string): Promise<IGDPRErasureRequest> {
+    try {
+      const result = await this.query(
+        `UPDATE ${this.tableName} SET status = 'restored', restored_by = $1, restored_at = NOW(), restore_reason = $2, updated_at = NOW() WHERE id = $3 RETURNING *`,
+        [restoredBy, reason || null, requestId]
+      );
+
+      if (!result.rows[0]) {
+        throw new Error(`Erasure request ${requestId} not found`);
+      }
+
+      return result.rows[0];
+    } catch (error) {
+      logger.error(`Error restoring erasure request ${requestId}:`, error);
       throw error;
     }
   }

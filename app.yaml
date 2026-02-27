@@ -1,0 +1,27 @@
+runtime: nodejs20
+service: discord-bot
+
+env: standard
+
+instance_class: F4_1GB
+
+env_variables:
+  NODE_ENV: "production"
+  LOG_LEVEL: "info"
+
+# For Cloud SQL: Uncomment and configure if using Cloud SQL
+# cloud_sql_instances: "PROJECT_ID:REGION:INSTANCE_NAME"
+
+built_in_libraries: true
+
+# If using npm start
+entrypoint: "npm start"
+
+# Automatic scaling
+automatic_scaling:
+  min_instances: 1
+  max_instances: 10
+
+# Network configuration (optional)
+# vpc_access_connector:
+#   name: "projects/PROJECT_ID/locations/REGION/connectors/CONNECTOR_NAME"

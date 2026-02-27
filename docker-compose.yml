@@ -1,0 +1,45 @@
+version: '3.8'
+
+services:
+  bot:
+    build: .
+    container_name: discord-bot
+    environment:
+      - NODE_ENV=development
+      - DISCORD_TOKEN=${DISCORD_TOKEN}
+      - DATABASE_URL=postgresql://botuser:botpassword@postgres:5432/discord_bot
+      - LOG_LEVEL=debug
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - bot-network
+    restart: unless-stopped
+    volumes:
+      - ./src:/app/src
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: discord-bot-postgres
+    environment:
+      POSTGRES_USER: botuser
+      POSTGRES_PASSWORD: botpassword
+      POSTGRES_DB: discord_bot
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - bot-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U botuser -d discord_bot"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+networks:
+  bot-network:
+    driver: bridge
+
+volumes:
+  postgres_data:

@@ -19,7 +19,7 @@ export class GDPRStatusCommand extends Command {
   name = 'gdprstatus';
   description = 'Check the status of your GDPR deletion request';
   aliases = ['deletestatus', 'erasurestatus', 'gdpr-status'];
-  usage = 'gdprstatus <request-id>';
+  usage = 'gdprstatus [request-id]';
   examples = ['gdprstatus erasure_694535322012483644_1709024400000'];
   requiredPermissions: string[] = [];
 

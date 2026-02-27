@@ -1,92 +1,207 @@
-import { Client, Collection, Intents } from 'discord.js';
-import dotenv from 'dotenv';
-import logger from './services/logger.js';
-import { initializeDatabase, closeDatabase } from './services/database.js';
+import { logger } from './services/logger';
+import { config, validateConfig } from './core/config';
+import { initializeDatabase, getDatabase, closeDatabase } from './services/database';
+import { BotClient } from './core/client';
+import { CommandHandler } from './commands/handler';
+import { PingCommand } from './commands/examples/ping';
+import { HelpCommand } from './commands/examples/help';
 
-dotenv.config();
-
-const DISCORD_TOKEN = process.env.DISCORD_TOKEN;
-const DATABASE_URL = process.env.DATABASE_URL;
-
-if (!DISCORD_TOKEN) {
-  logger.error('DISCORD_TOKEN environment variable is not set');
-  process.exit(1);
-}
-
-if (!DATABASE_URL) {
-  logger.error('DATABASE_URL environment variable is not set');
-  process.exit(1);
-}
-
-// Initialize Discord client
-const client = new Client({
-  intents: [
-    Intents.FLAGS.GUILDS,
-    Intents.FLAGS.GUILD_MEMBERS,
-    Intents.FLAGS.GUILD_MESSAGES,
-    Intents.FLAGS.MESSAGE_CONTENT,
-    Intents.FLAGS.DIRECT_MESSAGES,
-  ],
-});
-
-// Store commands for the bot
-export const commands = new Collection<string, any>();
-
-// Initialize database connection
-initializeDatabase(DATABASE_URL);
-
-// Ready event
-client.on('ready', () => {
-  logger.info(`Bot logged in as ${client.user?.tag}`);
-});
-
-// Message create event - example
-client.on('messageCreate', async (message) => {
-  if (message.author.bot) return;
-
-  if (message.content === '!ping') {
-    message.reply({
-      content: `Pong! Latency is ${Math.round(client.ws.ping)}ms.`
-    });
-  }
-});
-
-// Guild create event
-client.on('guildCreate', async (guild) => {
-  logger.info(`Bot joined guild: ${guild.name} (${guild.id})`);
-  
+/**
+ * Main bot initialization and startup
+ */
+async function main(): Promise<void> {
   try {
-    // Optional: Store guild info in database
-    // await saveGuild(guild.id, guild.name);
+    // Validate configuration
+    validateConfig();
+
+    logger.info('Starting Discord bot...', { service: 'Main' });
+
+    // Initialize database
+    logger.info('Initializing database...', { service: 'Main' });
+    initializeDatabase(config.database.url);
+    const db = getDatabase();
+    logger.info('Database initialized', { service: 'Main' });
+
+    // Create bot client
+    const client = new BotClient();
+
+    // Register commands
+    const pingCommand = new PingCommand();
+    const helpCommand = new HelpCommand();
+
+    client.registerCommand(pingCommand);
+    client.registerCommand(helpCommand);
+
+    logger.info(`Registered ${client.commands.size} commands`, {
+      service: 'Main',
+      commands: Array.from(client.commands.keys()),
+    });
+
+    // Create command handler
+    const commandHandler = new CommandHandler(
+      '!',
+      client.commands,
+      client.aliases
+    );
+
+    // Event: Ready
+    client.on('ready', () => {
+      logger.info(`Bot logged in as ${client.user?.tag}`, {
+        service: 'Bot',
+        userId: client.user?.id,
+      });
+
+      // Set bot status
+      if (client.user) {
+        client.user.setActivity('Discord bot service', { type: 'WATCHING' });
+      }
+    });
+
+    // Event: Message create
+    client.on('messageCreate', async (message) => {
+      await commandHandler.handleMessage(message);
+    });
+
+    // Event: Interaction create
+    client.on('interactionCreate', async (interaction) => {
+      if (interaction.isCommand()) {
+        await commandHandler.handleInteraction(interaction);
+      }
+    });
+
+    // Event: Guild create
+    client.on('guildCreate', async (guild) => {
+      logger.info(`Bot joined guild: ${guild.name}`, {
+        service: 'Bot',
+        guildId: guild.id,
+        guildName: guild.name,
+        memberCount: guild.memberCount,
+      });
+
+      try {
+        // Optionally store guild in database
+        await db.guilds.getOrCreate({
+          discord_guild_id: guild.id,
+          name: guild.name,
+          icon_url: guild.iconURL() || undefined,
+          owner_id: guild.ownerId,
+        });
+
+        // Log action
+        await db.auditLogs.logAction({
+          guild_id: guild.id,
+          action: 'guild_created',
+          details: {
+            name: guild.name,
+            memberCount: guild.memberCount,
+          },
+        });
+      } catch (error) {
+        logger.error('Error handling guild create event', {
+          service: 'Bot',
+          guildId: guild.id,
+          error,
+        });
+      }
+    });
+
+    // Event: Guild member add
+    client.on('guildMemberAdd', async (member) => {
+      logger.info(`User joined guild: ${member.guild.name}`, {
+        service: 'Bot',
+        userId: member.id,
+        guildId: member.guild.id,
+      });
+
+      try {
+        // Store or update user
+        const user = await db.users.getOrCreate({
+          discord_id: member.id,
+          username: member.user.username,
+          avatar_url: member.user.avatarURL() || undefined,
+        });
+
+        // Add member to guild
+        await db.guildMembers.getOrCreateMember({
+          guild_id: member.guild.id,
+          user_id: user.id,
+        });
+
+        // Log action
+        await db.auditLogs.logAction({
+          guild_id: member.guild.id,
+          user_id: user.id,
+          action: 'member_joined',
+          details: {
+            username: member.user.username,
+          },
+        });
+      } catch (error) {
+        logger.error('Error handling guild member add event', {
+          service: 'Bot',
+          userId: member.id,
+          guildId: member.guild.id,
+          error,
+        });
+      }
+    });
+
+    // Error handling
+    client.on('error', (error) => {
+      logger.error('Discord client error', {
+        service: 'Bot',
+        error,
+      });
+    });
+
+    // Handle unhandled promise rejections
+    process.on('unhandledRejection', (reason, promise) => {
+      logger.error('Unhandled rejection', {
+        service: 'Process',
+        reason,
+        promise: String(promise),
+      });
+    });
+
+    // Handle uncaught exceptions
+    process.on('uncaughtException', (error) => {
+      logger.error('Uncaught exception', {
+        service: 'Process',
+        error,
+      });
+      process.exit(1);
+    });
+
+    // Graceful shutdown
+    const shutdown = async (signal: string): Promise<void> => {
+      logger.info(`Received ${signal}, shutting down gracefully...`, {
+        service: 'Process',
+      });
+
+      client.destroy();
+      await closeDatabase();
+
+      logger.info('Bot shut down successfully', { service: 'Process' });
+      process.exit(0);
+    };
+
+    process.on('SIGINT', () => shutdown('SIGINT'));
+    process.on('SIGTERM', () => shutdown('SIGTERM'));
+
+    // Log in to Discord
+    logger.info('Logging into Discord...', { service: 'Bot' });
+    await client.login(config.discord.token);
   } catch (error) {
-    logger.error('Error handling guild create event', { error });
+    logger.error('Failed to start bot', {
+      service: 'Main',
+      error,
+    });
+    process.exit(1);
   }
-});
-
-// Error handling
-client.on('error', (error) => {
-  logger.error('Discord client error', { error });
-});
-
-process.on('unhandledRejection', (reason, promise) => {
-  logger.error('Unhandled Rejection at', { promise, reason });
-});
-
-// Graceful shutdown
-const shutdown = async () => {
-  logger.info('Shutting down bot...');
-  client.destroy();
-  await closeDatabase();
-  process.exit(0);
-};
-
-process.on('SIGINT', shutdown);
-process.on('SIGTERM', shutdown);
+}
 
 // Start the bot
-client.login(DISCORD_TOKEN).catch((error) => {
-  logger.error('Failed to login', { error });
+main().catch((error) => {
+  console.error('Fatal error:', error);
   process.exit(1);
 });
-
-export default client;

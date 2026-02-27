@@ -1,0 +1,79 @@
+import { Message, CommandInteraction, MessageEmbed, Collection } from 'discord.js';
+import { Command } from '../base';
+import { ICommand } from '../../interfaces/ICommand';
+
+/**
+ * Help command - list all commands or get help for a specific command
+ */
+export class HelpCommand extends Command {
+  name = 'help';
+  description = 'Show help information for commands';
+  aliases = ['h', 'commands'];
+  usage = 'help [command]';
+  examples = ['help', 'help ping'];
+
+  async execute(
+    context: Message | CommandInteraction,
+    commands?: Collection<string, ICommand>
+  ): Promise<void> {
+    if (!commands || commands.size === 0) {
+      throw new Error('Commands collection not provided');
+    }
+
+    let commandName: string | undefined;
+
+    if (context instanceof Message) {
+      const args = context.content.split(/\s+/).slice(1);
+      commandName = args[0] || undefined;
+    } else {
+      commandName = context.options.getString('command') || undefined;
+    }
+
+    if (commandName) {
+      const command = commands.get(commandName.toLowerCase());
+      if (!command) {
+        throw new Error(`Command \`${commandName}\` not found`);
+      }
+
+      const embed = new MessageEmbed()
+        .setTitle(`📚 Help: ${command.name}`)
+        .setDescription(command.description)
+        .setColor('#0099ff');
+
+      if (command.usage) {
+        embed.addField('Usage', `\`!${command.usage}\``);
+      }
+
+      if (command.aliases && command.aliases.length > 0) {
+        embed.addField('Aliases', command.aliases.map((a) => `\`${a}\``).join(', '));
+      }
+
+      if (command.examples && command.examples.length > 0) {
+        embed.addField('Examples', command.examples.map((e) => `\`!${e}\``).join('\n'));
+      }
+
+      if (context instanceof Message) {
+        await context.reply({ embeds: [embed] });
+      } else {
+        await context.reply({ embeds: [embed], ephemeral: true });
+      }
+    } else {
+      // List all commands
+      const commandList = commands
+        .map((cmd) => `\`${cmd.name}\` - ${cmd.description}`)
+        .join('\n');
+
+      const embed = new MessageEmbed()
+        .setTitle('📚 Available Commands')
+        .setDescription(commandList || 'No commands available')
+        .setColor('#0099ff')
+        .setFooter(`Use !help [command] for more info on a specific command`);
+
+      if (context instanceof Message) {
+        await context.reply({ embeds: [embed] });
+      } else {
+        await context.reply({ embeds: [embed], ephemeral: true });
+      }
+    }
+  }
+}

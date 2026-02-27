@@ -19,7 +19,7 @@ export class GDPRAdminCommand extends Command {
   name = 'gdpr-admin';
   description = 'Manage GDPR deletion requests (Admin only)';
   aliases = ['gdpradmin'];
-  usage = 'gdpr-admin [approve|deny|execute|restore|list] [request-id] [reason]';
+  usage = 'gdpr-admin list|approve|deny|execute|restore [request-id]';
   examples = [
     'gdpr-admin list',
     'gdpr-admin approve erasure_694535322012483644_1709024400000',

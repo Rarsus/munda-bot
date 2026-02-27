@@ -29,8 +29,15 @@ export class GDPRAdminCommand extends Command {
     'gdpr-admin restore erasure_694535322012483644_1709024400000 User changed mind',
   ];
   requiredPermissions: string[] = ['Administrator'];
+  subcommands = [
+    { name: 'list', description: 'Show all pending deletion requests' },
+    { name: 'approve', description: 'Approve a deletion request', usage: '[request-id]' },
+    { name: 'deny', description: 'Deny a deletion request', usage: '[request-id]' },
+    { name: 'execute', description: 'Immediately execute deletion', usage: '[request-id]' },
+    { name: 'restore', description: 'Restore deleted data', usage: '[request-id]' },
+  ];
 
-  async execute(context: Message | CommandInteraction): Promise<void> {
+  async execute(context: Message | CommandInteraction, _commands?: any, subcommandName?: string, subcommandArg?: string): Promise<void> {
     const userId = context instanceof Message ? context.author.id : context.user.id;
 
     // Check admin permission
@@ -66,11 +73,18 @@ export class GDPRAdminCommand extends Command {
         subcommand = args[0]?.toLowerCase();
         requestId = args[1];
         reason = args.slice(2).join(' ') || undefined;
-      } else if ('options' in context) {
-        const options = context.options as any;
-        subcommand = options.getSubcommand?.() || options.data?.[0]?.name;
-        requestId = options.getString?.('request-id') || options.data?.[1]?.value;
-        reason = options.getString?.('reason') || options.data?.[2]?.value;
+      } else {
+        // Handle slash command with subcommand passed from CommandHandler
+        if (subcommandName) {
+          subcommand = subcommandName;
+          requestId = subcommandArg;
+        } else if (context.isChatInputCommand?.()) {
+          // Fallback: Try to parse from options
+          const options = (context.options as any);
+          subcommand = options.getSubcommand?.() || options.data?.[0]?.name;
+          requestId = options.getString?.('request-id') || subcommandArg || options.data?.[1]?.value;
+          reason = options.getString?.('reason') || options.data?.[2]?.value;
+        }
       }
 
       switch (subcommand) {

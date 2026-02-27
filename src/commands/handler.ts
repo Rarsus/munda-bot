@@ -82,18 +82,47 @@ export class CommandHandler {
     }
 
     try {
-      logger.info(`Executing interaction command: ${command.name}`, {
-        service: 'CommandHandler',
-        userId: interaction.user.id,
-        guildId: interaction.guildId,
-      });
+      // Check if this is a subcommand interaction
+      let subcommandName: string | undefined;
+      let subcommandArg: string | undefined;
+
+      if (interaction.isChatInputCommand?.()) {
+        try {
+          const options = (interaction.options as any);
+          subcommandName = options.getSubcommand?.();
+          // Try to get the optional string parameter if present
+          if (subcommandName) {
+            const paramName =
+              command.subcommands?.find((s) => s.name === subcommandName)?.usage?.match(/\[?([a-z0-9\-]+)\]?/)?.[1] ||
+              'request-id';
+            subcommandArg = options.getString?.(paramName);
+          }
+        } catch {
+          // Not a subcommand interaction
+        }
+      }
+
+      const logData = subcommandName
+        ? {
+            service: 'CommandHandler',
+            userId: interaction.user.id,
+            guildId: interaction.guildId,
+            subcommand: subcommandName,
+          }
+        : {
+            service: 'CommandHandler',
+            userId: interaction.user.id,
+            guildId: interaction.guildId,
+          };
+
+      logger.info(`Executing interaction command: ${command.name}`, logData);
 
       if ('safeExecute' in command) {
         await (
           command as unknown as { safeExecute(...args: unknown[]): Promise<void> }
-        ).safeExecute(interaction, this.commands);
+        ).safeExecute(interaction, this.commands, subcommandName, subcommandArg);
       } else {
-        await command.execute(interaction, this.commands);
+        await command.execute(interaction, this.commands, subcommandName, subcommandArg);
       }
     } catch (error) {
       logger.error(`Interaction command execution failed: ${command.name}`, {

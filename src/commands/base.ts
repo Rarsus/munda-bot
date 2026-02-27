@@ -1,5 +1,5 @@
 import { Message, CommandInteraction } from 'discord.js';
-import { ICommand } from '../interfaces/ICommand';
+import { ICommand, Subcommand } from '../interfaces/ICommand';
 import { handleError } from '../middleware/errorHandler';
 
 /**
@@ -15,6 +15,7 @@ export abstract class Command implements ICommand {
   requiresAuth?: boolean;
   usage?: string;
   examples?: string[];
+  subcommands?: Subcommand[];
 
   /**
    * Execute the command - implement in subclass
@@ -44,6 +45,7 @@ export abstract class Command implements ICommand {
       requiresAuth: this.requiresAuth,
       usage: this.usage,
       examples: this.examples,
+      subcommands: this.subcommands,
     };
   }
 }

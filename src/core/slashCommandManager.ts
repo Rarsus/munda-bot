@@ -78,11 +78,11 @@ export class SlashCommandManager {
 
     for (const [, command] of this.commands) {
       try {
-        // Skip commands with subcommands or complex patterns
-        // These need manual slash command configuration in a future update
-        if (command.usage && command.usage.includes('|')) {
-          logger.debug(`Skipping slash command for ${command.name} (has subcommands)`, {
+        // Skip commands with subcommands for now - manual configuration TBD
+        if (command.subcommands && command.subcommands.length > 0) {
+          logger.debug(`Skipping slash command for ${command.name} (has subcommands - WIP)`, {
             service: 'SlashCommandManager',
+            subcommandCount: command.subcommands.length,
           });
           continue;
         }
@@ -98,7 +98,6 @@ export class SlashCommandManager {
             setDefaultMemberPermissions?: (perms: number) => unknown;
           };
 
-          // Only try to set permissions if the method exists
           if (builderAny.setDefaultMemberPermissions) {
             let permissions = 0;
 
@@ -120,20 +119,17 @@ export class SlashCommandManager {
           }
         }
 
-        // Add optional string option if command has arguments
-        // Only add if the usage pattern is simple (avoid multi-subcommand patterns)
+        // Add optional string option for simple commands with arguments
         if (command.usage && command.usage.includes('[')) {
           const match = command.usage.match(/\[([^\]]+)\]/);
           if (match) {
             const optionName = match[1];
-            
-            // Validate option name (Discord has length/character restrictions)
+
             if (optionName.length <= 32 && /^[a-z0-9_-]+$/i.test(optionName)) {
-              // Use type casting for the builder
               const builderAny = builder as unknown as {
                 addStringOption: (fn: unknown) => unknown;
               };
-              
+
               builderAny.addStringOption((option: unknown) => {
                 const optAny = option as unknown as {
                   setName: (n: string) => unknown;
@@ -153,9 +149,11 @@ export class SlashCommandManager {
 
         slashCommands.push(builder.toJSON());
       } catch (error) {
-        logger.warn(`Failed to build slash command for ${command.name}`, {
+        const errorMessage = error instanceof Error ? error.message : String(error);
+        logger.warn(`Failed to build slash command for ${command.name}: ${errorMessage}`, {
           service: 'SlashCommandManager',
-          error,
+          commandName: command.name,
+          error: errorMessage,
         });
       }
     }

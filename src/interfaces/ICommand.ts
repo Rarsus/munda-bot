@@ -1,5 +1,11 @@
 import { Message, CommandInteraction } from 'discord.js';
 
+export interface Subcommand {
+  name: string;
+  description: string;
+  usage?: string;
+}
+
 export interface ICommand {
   name: string;
   description: string;
@@ -8,6 +14,7 @@ export interface ICommand {
   requiresAuth?: boolean;
   usage?: string;
   examples?: string[];
+  subcommands?: Subcommand[];
 
   /**
    * Execute the command

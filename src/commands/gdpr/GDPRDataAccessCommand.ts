@@ -1,4 +1,5 @@
-import { Message, CommandInteraction, MessageEmbed } from 'discord.js';
+import { EmbedBuilder } from '@discordjs/builders';
+import { Message, CommandInteraction } from 'discord.js';
 import { Command } from '../base';
 import { GDPRService } from '../../services/gdpr';
 import { verifyDataOwnership, logDataAccess } from '../../middleware/gdpr';
@@ -38,8 +39,8 @@ export class GDPRDataAccessCommand extends Command {
       const userData = await this.gdprService.getUserData(userId);
 
       if (!userData) {
-        const embed = new MessageEmbed()
-          .setColor('#ff9900')
+        const embed = new EmbedBuilder()
+          .setColor(0x)
           .setTitle('⚠️ No Data Found')
           .setDescription("We don't have any data stored for you in our system.")
           .setFooter('Data: ' + new Date().toISOString());
@@ -62,8 +63,8 @@ export class GDPRDataAccessCommand extends Command {
       );
 
       // Create data summary embed
-      const embed = new MessageEmbed()
-        .setColor('#0099ff')
+      const embed = new EmbedBuilder()
+        .setColor(0x)
         .setTitle('📋 Your Personal Data Summary')
         .addField('Discord ID', userData.user_id, false)
         .addField('Username', userData.username, true)
@@ -86,8 +87,8 @@ export class GDPRDataAccessCommand extends Command {
     } catch (error) {
       logger.error(`Error in GDPRDataAccessCommand for user ${userId}:`, error);
 
-      const errorEmbed = new MessageEmbed()
-        .setColor('#ff0000')
+      const errorEmbed = new EmbedBuilder()
+        .setColor(0x)
         .setTitle('❌ Error Retrieving Your Data')
         .setDescription(error instanceof Error ? error.message : 'An unexpected error occurred')
         .setFooter('If this persists, please contact support');

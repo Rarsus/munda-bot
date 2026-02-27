@@ -1,4 +1,5 @@
-import { Message, CommandInteraction, MessageEmbed } from 'discord.js';
+import { EmbedBuilder } from '@discordjs/builders';
+import { Message, CommandInteraction } from 'discord.js';
 import { logger } from '../services/logger';
 
 export class AppError extends Error {
@@ -45,8 +46,8 @@ export async function handleError(
   });
 
   // Send error message to user
-  const errorEmbed = new MessageEmbed()
-    .setColor('#ff0000')
+  const errorEmbed = new EmbedBuilder()
+    .setColor(0x)
     .setTitle('❌ Command Error')
     .setDescription(appError.message)
     .addField('Error Code', appError.code)

@@ -1,13 +1,14 @@
+import { EmbedBuilder } from '@discordjs/builders';
 import { MessageEmbed, User } from 'discord.js';
 
 /**
  * Create success embed
  */
 export function createSuccessEmbed(title: string, description?: string): MessageEmbed {
-  return new MessageEmbed()
+  return new EmbedBuilder()
     .setTitle(`✅ ${title}`)
     .setDescription(description || '')
-    .setColor('#00ff00')
+    .setColor(0x)
     .setTimestamp();
 }
 
@@ -15,10 +16,10 @@ export function createSuccessEmbed(title: string, description?: string): Message
  * Create error embed
  */
 export function createErrorEmbed(title: string, description?: string): MessageEmbed {
-  return new MessageEmbed()
+  return new EmbedBuilder()
     .setTitle(`❌ ${title}`)
     .setDescription(description || '')
-    .setColor('#ff0000')
+    .setColor(0x)
     .setTimestamp();
 }
 
@@ -26,10 +27,10 @@ export function createErrorEmbed(title: string, description?: string): MessageEm
  * Create info embed
  */
 export function createInfoEmbed(title: string, description?: string): MessageEmbed {
-  return new MessageEmbed()
+  return new EmbedBuilder()
     .setTitle(`ℹ️ ${title}`)
     .setDescription(description || '')
-    .setColor('#0099ff')
+    .setColor(0x)
     .setTimestamp();
 }
 
@@ -37,10 +38,10 @@ export function createInfoEmbed(title: string, description?: string): MessageEmb
  * Create user embed
  */
 export function createUserEmbed(user: User): MessageEmbed {
-  return new MessageEmbed()
+  return new EmbedBuilder()
     .setTitle(`👤 ${user.username}`)
     .setDescription(`ID: ${user.id}`)
-    .setColor('#9370db')
+    .setColor(0x)
     .setThumbnail(user.avatarURL({ size: 256 }) || '')
     .setTimestamp();
 }

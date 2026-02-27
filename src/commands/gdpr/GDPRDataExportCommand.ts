@@ -1,4 +1,5 @@
-import { Message, CommandInteraction, MessageEmbed } from 'discord.js';
+import { EmbedBuilder } from '@discordjs/builders';
+import { Message, CommandInteraction } from 'discord.js';
 import { Command } from '../base';
 import { GDPRService } from '../../services/gdpr';
 import { verifyDataOwnership } from '../../middleware/gdpr';
@@ -41,8 +42,8 @@ export class GDPRDataExportCommand extends Command {
       const jsonData = JSON.stringify(dataPackage, null, 2);
 
       // Create embed
-      const embed = new MessageEmbed()
-        .setColor('#00ff00')
+      const embed = new EmbedBuilder()
+        .setColor(0x)
         .setTitle('✅ Data Export Created')
         .setDescription('Your complete data package has been generated and is ready for download.')
         .addField(
@@ -84,8 +85,8 @@ export class GDPRDataExportCommand extends Command {
     } catch (error) {
       logger.error(`Error in GDPRDataExportCommand for user ${userId}:`, error);
 
-      const errorEmbed = new MessageEmbed()
-        .setColor('#ff0000')
+      const errorEmbed = new EmbedBuilder()
+        .setColor(0x)
         .setTitle('❌ Error Exporting Your Data')
         .setDescription(error instanceof Error ? error.message : 'An unexpected error occurred')
         .addField('What to do', 'If this error persists, please contact the bot administrator')

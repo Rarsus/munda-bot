@@ -24,7 +24,8 @@
   "author": "",
   "license": "MIT",
   "dependencies": {
-    "discord.js": "^13.17.1",
+    "@discordjs/builders": "^1.13.1",
+    "discord.js": "^14.25.1",
     "dotenv": "^16.4.5",
     "node-cron": "^4.2.1",
     "pg": "^8.11.4",

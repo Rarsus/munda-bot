@@ -1,4 +1,5 @@
-import { Message, CommandInteraction, MessageEmbed } from 'discord.js';
+import { EmbedBuilder } from '@discordjs/builders';
+import { Message, CommandInteraction } from 'discord.js';
 import { Command } from '../base';
 import { GDPRService } from '../../services/gdpr';
 import { logger } from '../../services/logger';
@@ -37,8 +38,8 @@ export class GDPRStatusCommand extends Command {
       }
 
       if (!requestId) {
-        const errorEmbed = new MessageEmbed()
-          .setColor('#ff0000')
+        const errorEmbed = new EmbedBuilder()
+          .setColor(0x)
           .setTitle('❌ Missing Request ID')
           .setDescription('Please provide your deletion request ID')
           .addField('Usage', '`/gdprstatus <request-id>`', false)
@@ -57,8 +58,8 @@ export class GDPRStatusCommand extends Command {
       const status = await this.gdprService.getErasureRequestStatus(requestId);
 
       if (!status) {
-        const notFoundEmbed = new MessageEmbed()
-          .setColor('#ff9900')
+        const notFoundEmbed = new EmbedBuilder()
+          .setColor(0x)
           .setTitle('⚠️ Request Not Found')
           .setDescription(`No deletion request found with ID: ${requestId}`)
           .addField('What to do', 'Double-check the request ID and try again', false)
@@ -84,8 +85,8 @@ export class GDPRStatusCommand extends Command {
 
       // Verify ownership
       if (status.user_id !== userId) {
-        const unauthorizedEmbed = new MessageEmbed()
-          .setColor('#ff0000')
+        const unauthorizedEmbed = new EmbedBuilder()
+          .setColor(0x)
           .setTitle('❌ Unauthorized')
           .setDescription('You can only view your own deletion requests')
           .setFooter('If you need help, contact support');
@@ -105,7 +106,7 @@ export class GDPRStatusCommand extends Command {
       const statusEmoji = this.getStatusEmoji(status.status);
       const timelineText = this.buildTimeline(status);
 
-      const statusEmbed = new MessageEmbed()
+      const statusEmbed = new EmbedBuilder()
         .setColor(statusColor as any)
         .setTitle(`${statusEmoji} Deletion Request Status`)
         .addField('Request ID', status.request_id, false)
@@ -166,8 +167,8 @@ export class GDPRStatusCommand extends Command {
     } catch (error) {
       logger.error(`Error in GDPRStatusCommand for user ${userId}:`, error);
 
-      const errorEmbed = new MessageEmbed()
-        .setColor('#ff0000')
+      const errorEmbed = new EmbedBuilder()
+        .setColor(0x)
         .setTitle('❌ Error Checking Status')
         .setDescription('An error occurred while checking your request status')
         .setFooter('Please try again in a moment');

@@ -1,4 +1,5 @@
-import { Message, CommandInteraction, MessageEmbed } from 'discord.js';
+import { EmbedBuilder } from '@discordjs/builders';
+import { Message, CommandInteraction } from 'discord.js';
 import { Command } from '../base';
 import { GDPRService } from '../../services/gdpr';
 import { verifyDataOwnership } from '../../middleware/gdpr';
@@ -45,8 +46,8 @@ export class GDPRDataDeletionCommand extends Command {
       const erasureRequest = await this.gdprService.requestErasure(userId, reason);
 
       // Create confirmation embed
-      const confirmEmbed = new MessageEmbed()
-        .setColor('#ffcc00')
+      const confirmEmbed = new EmbedBuilder()
+        .setColor(0x)
         .setTitle('⚠️ Data Deletion Request Initiated')
         .setDescription('Your request to delete all personal data has been submitted.')
         .addField('Request ID', erasureRequest.id, false)
@@ -73,8 +74,8 @@ export class GDPRDataDeletionCommand extends Command {
       }
 
       // Send follow-up with next steps
-      const nextStepsEmbed = new MessageEmbed()
-        .setColor('#0099ff')
+      const nextStepsEmbed = new EmbedBuilder()
+        .setColor(0x)
         .setTitle('📋 Next Steps')
         .setDescription("Your deletion request has been queued. Here's what happens next:")
         .addField('1. Review', 'Our team will review your request (usually within 24 hours)', false)
@@ -98,8 +99,8 @@ export class GDPRDataDeletionCommand extends Command {
     } catch (error) {
       logger.error(`Error in GDPRDataDeletionCommand for user ${userId}:`, error);
 
-      const errorEmbed = new MessageEmbed()
-        .setColor('#ff0000')
+      const errorEmbed = new EmbedBuilder()
+        .setColor(0x)
         .setTitle('❌ Error Submitting Deletion Request')
         .setDescription(error instanceof Error ? error.message : 'An unexpected error occurred')
         .addField(

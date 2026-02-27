@@ -1,4 +1,5 @@
-import { Message, MessageEmbed } from 'discord.js';
+import { EmbedBuilder } from '@discordjs/builders';
+import { Message } from 'discord.js';
 import { Command } from './base';
 
 /**
@@ -23,10 +24,10 @@ export function parseCommandArgs(
 export function createCommandHelpEmbed(command: Command): MessageEmbed {
   const info = command.getInfo();
 
-  const embed = new MessageEmbed()
+  const embed = new EmbedBuilder()
     .setTitle(`📚 Help: ${info.name}`)
     .setDescription(info.description)
-    .setColor('#0099ff');
+    .setColor(0x);
 
   if (info.usage) {
     embed.addField('Usage', `!\`${info.usage}\``);

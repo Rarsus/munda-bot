@@ -1,4 +1,5 @@
-import { Message, CommandInteraction, MessageEmbed, Collection } from 'discord.js';
+import { EmbedBuilder } from '@discordjs/builders';
+import { Message, CommandInteraction, Collection } from 'discord.js';
 import { Command } from '../base';
 import { ICommand } from '../../interfaces/ICommand';
 
@@ -35,10 +36,10 @@ export class HelpCommand extends Command {
         throw new Error(`Command \`${commandName}\` not found`);
       }
 
-      const embed = new MessageEmbed()
+      const embed = new EmbedBuilder()
         .setTitle(`📚 Help: ${command.name}`)
         .setDescription(command.description)
-        .setColor('#0099ff');
+        .setColor(0x);
 
       if (command.usage) {
         embed.addField('Usage', `\`!${command.usage}\``);
@@ -61,10 +62,10 @@ export class HelpCommand extends Command {
       // List all commands
       const commandList = commands.map((cmd) => `\`${cmd.name}\` - ${cmd.description}`).join('\n');
 
-      const embed = new MessageEmbed()
+      const embed = new EmbedBuilder()
         .setTitle('📚 Available Commands')
         .setDescription(commandList || 'No commands available')
-        .setColor('#0099ff')
+        .setColor(0x)
         .setFooter(`Use !help [command] for more info on a specific command`);
 
       if (context instanceof Message) {

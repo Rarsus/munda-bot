@@ -1,4 +1,4 @@
-import { Message, CommandInteraction, MessageEmbed } from 'discord.js';
+import { Message, ChatInputCommandInteraction, EmbedBuilder } from 'discord.js';
 import { logger } from '../services/logger';
 
 export class AppError extends Error {
@@ -18,7 +18,7 @@ export class AppError extends Error {
  */
 export async function handleError(
   error: unknown,
-  context: Message | CommandInteraction
+  context: Message | ChatInputCommandInteraction
 ): Promise<void> {
   let appError: AppError;
 
@@ -45,11 +45,11 @@ export async function handleError(
   });
 
   // Send error message to user
-  const errorEmbed = new MessageEmbed()
-    .setColor('#ff0000')
+  const errorEmbed = new EmbedBuilder()
+    .setColor(0xff0000)
     .setTitle('❌ Command Error')
     .setDescription(appError.message)
-    .addField('Error Code', appError.code)
+    .addFields([{ name: 'Error Code', value: appError.code }])
     .setTimestamp();
 
   try {

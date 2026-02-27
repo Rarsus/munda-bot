@@ -1,4 +1,4 @@
-import { Message, CommandInteraction, MessageEmbed } from 'discord.js';
+import { Message, ChatInputCommandInteraction, EmbedBuilder } from 'discord.js';
 import { Command } from '../base';
 import { GDPRService } from '../../services/gdpr';
 import { verifyDataOwnership, logDataAccess } from '../../middleware/gdpr';
@@ -24,7 +24,7 @@ export class GDPRDataAccessCommand extends Command {
   examples = ['gdprdata'];
   requiredPermissions: string[] = [];
 
-  async execute(context: Message | CommandInteraction): Promise<void> {
+  async execute(context: Message | ChatInputCommandInteraction): Promise<void> {
     const userId = context instanceof Message ? context.author.id : context.user.id;
 
     try {
@@ -38,11 +38,11 @@ export class GDPRDataAccessCommand extends Command {
       const userData = await this.gdprService.getUserData(userId);
 
       if (!userData) {
-        const embed = new MessageEmbed()
-          .setColor('#ff9900')
+        const embed = new EmbedBuilder()
+          .setColor(0xff9900)
           .setTitle('⚠️ No Data Found')
           .setDescription("We don't have any data stored for you in our system.")
-          .setFooter('Data: ' + new Date().toISOString());
+          .setFooter({ text: 'Data: ' + new Date().toISOString() });
 
         if (context instanceof Message) {
           await context.reply({ embeds: [embed] });
@@ -62,20 +62,22 @@ export class GDPRDataAccessCommand extends Command {
       );
 
       // Create data summary embed
-      const embed = new MessageEmbed()
-        .setColor('#0099ff')
+      const embed = new EmbedBuilder()
+        .setColor(0x0099ff)
         .setTitle('📋 Your Personal Data Summary')
-        .addField('Discord ID', userData.user_id, false)
-        .addField('Username', userData.username, true)
-        .addField('Discriminator', userData.discriminator, true)
-        .addField('Email', userData.email || 'Not provided', true)
-        .addField('Avatar', userData.avatar_url ? 'Stored' : 'Not stored', true)
-        .addField('Bio', userData.bio || 'Not provided', false)
-        .addField('Account Created', userData.created_at.toISOString(), false)
-        .addField('Last Updated', userData.updated_at.toISOString(), false)
-        .setFooter(
-          'Use /gdprexport to get a full data portability package or /gdpdelete to request deletion'
-        )
+        .addFields([
+          { name: 'Discord ID', value: userData.user_id, inline: false },
+          { name: 'Username', value: userData.username, inline: true },
+          { name: 'Discriminator', value: userData.discriminator, inline: true },
+          { name: 'Email', value: userData.email || 'Not provided', inline: true },
+          { name: 'Avatar', value: userData.avatar_url ? 'Stored' : 'Not stored', inline: true },
+          { name: 'Bio', value: userData.bio || 'Not provided', inline: false },
+          { name: 'Account Created', value: userData.created_at.toISOString(), inline: false },
+          { name: 'Last Updated', value: userData.updated_at.toISOString(), inline: false },
+        ])
+        .setFooter({
+          text: 'Use /gdprexport to get a full data portability package or /gdpdelete to request deletion',
+        })
         .setTimestamp();
 
       if (context instanceof Message) {
@@ -86,11 +88,11 @@ export class GDPRDataAccessCommand extends Command {
     } catch (error) {
       logger.error(`Error in GDPRDataAccessCommand for user ${userId}:`, error);
 
-      const errorEmbed = new MessageEmbed()
-        .setColor('#ff0000')
+      const errorEmbed = new EmbedBuilder()
+        .setColor(0xff0000)
         .setTitle('❌ Error Retrieving Your Data')
         .setDescription(error instanceof Error ? error.message : 'An unexpected error occurred')
-        .setFooter('If this persists, please contact support');
+        .setFooter({ text: 'If this persists, please contact support' });
 
       if (context instanceof Message) {
         await context.reply({ embeds: [errorEmbed] });

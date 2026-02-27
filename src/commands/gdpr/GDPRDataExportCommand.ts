@@ -1,4 +1,4 @@
-import { Message, CommandInteraction, MessageEmbed } from 'discord.js';
+import { Message, ChatInputCommandInteraction, EmbedBuilder } from 'discord.js';
 import { Command } from '../base';
 import { GDPRService } from '../../services/gdpr';
 import { verifyDataOwnership } from '../../middleware/gdpr';
@@ -24,7 +24,7 @@ export class GDPRDataExportCommand extends Command {
   examples = ['gdprexport json', 'gdprexport csv'];
   requiredPermissions: string[] = [];
 
-  async execute(context: Message | CommandInteraction): Promise<void> {
+  async execute(context: Message | ChatInputCommandInteraction): Promise<void> {
     const userId = context instanceof Message ? context.author.id : context.user.id;
 
     try {
@@ -41,19 +41,23 @@ export class GDPRDataExportCommand extends Command {
       const jsonData = JSON.stringify(dataPackage, null, 2);
 
       // Create embed
-      const embed = new MessageEmbed()
-        .setColor('#00ff00')
+      const embed = new EmbedBuilder()
+        .setColor(0x00ff00)
         .setTitle('✅ Data Export Created')
         .setDescription('Your complete data package has been generated and is ready for download.')
-        .addField(
-          'Contents',
-          `- Personal Profile\n- Guild Memberships (${dataPackage.guild_memberships.length})\n- Consent Records (${dataPackage.consents.length})\n- Access Audit Trail (${dataPackage.audit_summary.total_accesses} entries)`,
-          false
-        )
-        .addField('Format', 'JSON (machine-readable, universally compatible)', true)
-        .addField('Size', `${(jsonData.length / 1024).toFixed(2)} KB`, true)
-        .addField('Generated At', dataPackage.exported_at.toISOString(), false)
-        .setFooter('This file contains all your data. Store it securely. Data valid for 30 days.');
+        .addFields([
+          {
+            name: 'Contents',
+            value: `- Personal Profile\n- Guild Memberships (${dataPackage.guild_memberships.length})\n- Consent Records (${dataPackage.consents.length})\n- Access Audit Trail (${dataPackage.audit_summary.total_accesses} entries)`,
+            inline: false,
+          },
+          { name: 'Format', value: 'JSON (machine-readable, universally compatible)', inline: true },
+          { name: 'Size', value: `${(jsonData.length / 1024).toFixed(2)} KB`, inline: true },
+          { name: 'Generated At', value: dataPackage.exported_at.toISOString(), inline: false },
+        ])
+        .setFooter({
+          text: 'This file contains all your data. Store it securely. Data valid for 30 days.',
+        });
 
       if (context instanceof Message) {
         // For message commands, send the embed and data file
@@ -70,7 +74,7 @@ export class GDPRDataExportCommand extends Command {
       } else {
         // For interaction commands
         const buffer = Buffer.from(jsonData, 'utf-8');
-        await (context as CommandInteraction).reply({
+        await context.reply({
           embeds: [embed],
           files: [
             {
@@ -84,12 +88,14 @@ export class GDPRDataExportCommand extends Command {
     } catch (error) {
       logger.error(`Error in GDPRDataExportCommand for user ${userId}:`, error);
 
-      const errorEmbed = new MessageEmbed()
-        .setColor('#ff0000')
+      const errorEmbed = new EmbedBuilder()
+        .setColor(0xff0000)
         .setTitle('❌ Error Exporting Your Data')
         .setDescription(error instanceof Error ? error.message : 'An unexpected error occurred')
-        .addField('What to do', 'If this error persists, please contact the bot administrator')
-        .setFooter('Request ID: ' + Date.now());
+        .addFields([
+          { name: 'What to do', value: 'If this error persists, please contact the bot administrator' },
+        ])
+        .setFooter({ text: 'Request ID: ' + Date.now() });
 
       if (context instanceof Message) {
         await context.reply({ embeds: [errorEmbed] });

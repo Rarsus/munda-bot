@@ -1,11 +1,11 @@
-import { Message, CommandInteraction, Permissions } from 'discord.js';
+import { Message, ChatInputCommandInteraction, PermissionFlagsBits } from 'discord.js';
 import { AuthorizationError } from './errorHandler';
 
 /**
  * Check if user has required permissions
  */
 export function checkPermissions(
-  context: Message | CommandInteraction,
+  context: Message | ChatInputCommandInteraction,
   requiredPermissions: string[]
 ): boolean {
   if (!context.guild || !context.member) {
@@ -18,8 +18,8 @@ export function checkPermissions(
   }
 
   return requiredPermissions.every((perm) => {
-    const permValue = (Permissions.FLAGS as any)[perm];
-    return permValue && (member.permissions as any).has(permValue);
+    const permValue = (PermissionFlagsBits as Record<string, bigint>)[perm];
+    return permValue && (member.permissions as { has(perm: bigint): boolean }).has(permValue);
   });
 }
 
@@ -27,7 +27,7 @@ export function checkPermissions(
  * Require specific permissions
  */
 export async function requirePermissions(
-  context: Message | CommandInteraction,
+  context: Message | ChatInputCommandInteraction,
   requiredPermissions: string[]
 ): Promise<void> {
   if (!checkPermissions(context, requiredPermissions)) {
@@ -40,7 +40,7 @@ export async function requirePermissions(
 /**
  * Check if user is owner or admin
  */
-export function isAdmin(context: Message | CommandInteraction): boolean {
+export function isAdmin(context: Message | ChatInputCommandInteraction): boolean {
   if (!context.guild || !context.member) {
     return false;
   }
@@ -50,13 +50,15 @@ export function isAdmin(context: Message | CommandInteraction): boolean {
     return false;
   }
 
-  return member.permissions.has(Permissions.FLAGS.ADMINISTRATOR);
+  return member.permissions.has(PermissionFlagsBits.Administrator);
 }
 
 /**
  * Require admin permissions
  */
-export async function requireAdmin(context: Message | CommandInteraction): Promise<void> {
+export async function requireAdmin(
+  context: Message | ChatInputCommandInteraction
+): Promise<void> {
   if (!isAdmin(context)) {
     throw new AuthorizationError('This command requires administrator permissions');
   }
@@ -65,7 +67,7 @@ export async function requireAdmin(context: Message | CommandInteraction): Promi
 /**
  * Check if user is guild owner
  */
-export function isGuildOwner(context: Message | CommandInteraction): boolean {
+export function isGuildOwner(context: Message | ChatInputCommandInteraction): boolean {
   if (!context.guild) {
     return false;
   }
@@ -77,7 +79,9 @@ export function isGuildOwner(context: Message | CommandInteraction): boolean {
 /**
  * Require guild owner
  */
-export async function requireGuildOwner(context: Message | CommandInteraction): Promise<void> {
+export async function requireGuildOwner(
+  context: Message | ChatInputCommandInteraction
+): Promise<void> {
   if (!isGuildOwner(context)) {
     throw new AuthorizationError('Only the guild owner can use this command');
   }

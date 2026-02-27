@@ -1,4 +1,4 @@
-import { Message, CommandInteraction, Collection } from 'discord.js';
+import { Message, ChatInputCommandInteraction, Collection } from 'discord.js';
 import { logger } from '../services/logger';
 import { ICommand } from '../interfaces/ICommand';
 import { parseCommandArgs } from './types';
@@ -69,7 +69,7 @@ export class CommandHandler {
   /**
    * Handle interaction commands
    */
-  async handleInteraction(interaction: CommandInteraction): Promise<void> {
+  async handleInteraction(interaction: ChatInputCommandInteraction): Promise<void> {
     const command = this.commands.get(interaction.commandName);
 
     if (!command) {

@@ -1,3 +1,4 @@
+import { ActivityType } from 'discord.js';
 import { logger } from './services/logger';
 import { config, validateConfig } from './core/config';
 import { initializeDatabase, getDatabase, closeDatabase } from './services/database';
@@ -49,7 +50,7 @@ async function main(): Promise<void> {
 
       // Set bot status
       if (client.user) {
-        client.user.setActivity('Discord bot service', { type: 'WATCHING' });
+        client.user.setActivity('Discord bot service', { type: ActivityType.Watching });
       }
     });
 
@@ -60,7 +61,7 @@ async function main(): Promise<void> {
 
     // Event: Interaction create
     client.on('interactionCreate', async (interaction) => {
-      if (interaction.isCommand()) {
+      if (interaction.isChatInputCommand()) {
         await commandHandler.handleInteraction(interaction);
       }
     });

@@ -1,4 +1,4 @@
-import { Message, MessageEmbed } from 'discord.js';
+import { Message, EmbedBuilder } from 'discord.js';
 import { Command } from './base';
 
 /**
@@ -20,28 +20,30 @@ export function parseCommandArgs(
 /**
  * Create a help embed for a command
  */
-export function createCommandHelpEmbed(command: Command): MessageEmbed {
+export function createCommandHelpEmbed(command: Command): EmbedBuilder {
   const info = command.getInfo();
 
-  const embed = new MessageEmbed()
+  const embed = new EmbedBuilder()
     .setTitle(`📚 Help: ${info.name}`)
     .setDescription(info.description)
-    .setColor('#0099ff');
+    .setColor(0x0099ff);
 
   if (info.usage) {
-    embed.addField('Usage', `!\`${info.usage}\``);
+    embed.addFields([{ name: 'Usage', value: `!\`${info.usage}\`` }]);
   }
 
   if (info.aliases && info.aliases.length > 0) {
-    embed.addField('Aliases', info.aliases.map((a) => `\`${a}\``).join(', '));
+    embed.addFields([{ name: 'Aliases', value: info.aliases.map((a) => `\`${a}\``).join(', ') }]);
   }
 
   if (info.examples && info.examples.length > 0) {
-    embed.addField('Examples', info.examples.map((e) => `\`!${e}\``).join('\n'));
+    embed.addFields([
+      { name: 'Examples', value: info.examples.map((e) => `\`!${e}\``).join('\n') },
+    ]);
   }
 
   if (info.requiredPermissions && info.requiredPermissions.length > 0) {
-    embed.addField('Required Permissions', info.requiredPermissions.join(', '));
+    embed.addFields([{ name: 'Required Permissions', value: info.requiredPermissions.join(', ') }]);
   }
 
   return embed;

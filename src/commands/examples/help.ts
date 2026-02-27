@@ -1,4 +1,4 @@
-import { Message, CommandInteraction, MessageEmbed, Collection } from 'discord.js';
+import { Message, ChatInputCommandInteraction, EmbedBuilder, Collection } from 'discord.js';
 import { Command } from '../base';
 import { ICommand } from '../../interfaces/ICommand';
 
@@ -13,7 +13,7 @@ export class HelpCommand extends Command {
   examples = ['help', 'help ping'];
 
   async execute(
-    context: Message | CommandInteraction,
+    context: Message | ChatInputCommandInteraction,
     commands?: Collection<string, ICommand>
   ): Promise<void> {
     if (!commands || commands.size === 0) {
@@ -35,21 +35,28 @@ export class HelpCommand extends Command {
         throw new Error(`Command \`${commandName}\` not found`);
       }
 
-      const embed = new MessageEmbed()
+      const embed = new EmbedBuilder()
         .setTitle(`📚 Help: ${command.name}`)
         .setDescription(command.description)
-        .setColor('#0099ff');
+        .setColor(0x0099ff);
 
       if (command.usage) {
-        embed.addField('Usage', `\`!${command.usage}\``);
+        embed.addFields([{ name: 'Usage', value: `\`!${command.usage}\`` }]);
       }
 
       if (command.aliases && command.aliases.length > 0) {
-        embed.addField('Aliases', command.aliases.map((a) => `\`${a}\``).join(', '));
+        embed.addFields([
+          { name: 'Aliases', value: command.aliases.map((a: string) => `\`${a}\``).join(', ') },
+        ]);
       }
 
       if (command.examples && command.examples.length > 0) {
-        embed.addField('Examples', command.examples.map((e) => `\`!${e}\``).join('\n'));
+        embed.addFields([
+          {
+            name: 'Examples',
+            value: command.examples.map((e: string) => `\`!${e}\``).join('\n'),
+          },
+        ]);
       }
 
       if (context instanceof Message) {
@@ -59,13 +66,15 @@ export class HelpCommand extends Command {
       }
     } else {
       // List all commands
-      const commandList = commands.map((cmd) => `\`${cmd.name}\` - ${cmd.description}`).join('\n');
+      const commandList = commands
+        .map((cmd: ICommand) => `\`${cmd.name}\` - ${cmd.description}`)
+        .join('\n');
 
-      const embed = new MessageEmbed()
+      const embed = new EmbedBuilder()
         .setTitle('📚 Available Commands')
         .setDescription(commandList || 'No commands available')
-        .setColor('#0099ff')
-        .setFooter(`Use !help [command] for more info on a specific command`);
+        .setColor(0x0099ff)
+        .setFooter({ text: 'Use !help [command] for more info on a specific command' });
 
       if (context instanceof Message) {
         await context.reply({ embeds: [embed] });

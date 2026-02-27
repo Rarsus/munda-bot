@@ -1,4 +1,4 @@
-import { Message, CommandInteraction } from 'discord.js';
+import { Message, ChatInputCommandInteraction } from 'discord.js';
 
 export interface ICommand {
   name: string;
@@ -14,5 +14,5 @@ export interface ICommand {
    * @param args Message arguments or interaction
    * @returns Promise<void>
    */
-  execute(args: Message | CommandInteraction, ...params: unknown[]): Promise<void>;
+  execute(args: Message | ChatInputCommandInteraction, ...params: unknown[]): Promise<void>;
 }

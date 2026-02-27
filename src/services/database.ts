@@ -33,6 +33,13 @@ export function getDatabase(): Database {
   return db;
 }
 
+export function getPool(): Pool {
+  if (!pool) {
+    throw new Error('Database not initialized');
+  }
+  return pool;
+}
+
 export async function getClient(): Promise<PoolClient> {
   if (!pool) {
     throw new Error('Database not initialized');

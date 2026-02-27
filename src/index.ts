@@ -3,8 +3,8 @@ import { config, validateConfig } from './core/config';
 import { initializeDatabase, getDatabase, closeDatabase } from './services/database';
 import { BotClient } from './core/client';
 import { CommandHandler } from './commands/handler';
-import { PingCommand } from './commands/examples/ping';
-import { HelpCommand } from './commands/examples/help';
+import { SlashCommandManager } from './core/slashCommandManager';
+import { CommandRegistry } from './services/commandRegistry';
 
 /**
  * Main bot initialization and startup
@@ -25,27 +25,36 @@ async function main(): Promise<void> {
     // Create bot client
     const client = new BotClient();
 
-    // Register commands
-    const pingCommand = new PingCommand();
-    const helpCommand = new HelpCommand();
+    // Initialize command registry
+    const commandRegistry = new CommandRegistry();
+    const { commands } = await commandRegistry.initialize();
 
-    client.registerCommand(pingCommand);
-    client.registerCommand(helpCommand);
+    // Register commands with client
+    for (const [, command] of commands) {
+      client.registerCommand(command);
+    }
 
-    logger.info(`Registered ${client.commands.size} commands`, {
+    logger.info(`Registered ${commands.size} commands`, {
       service: 'Main',
-      commands: Array.from(client.commands.keys()),
+      commands: Array.from(commands.keys()),
     });
 
     // Create command handler
     const commandHandler = new CommandHandler('!', client.commands, client.aliases);
 
+    // Create slash command manager
+    const slashCommandManager = new SlashCommandManager(client, client.commands);
+
     // Event: Ready
-    client.on('ready', () => {
+    client.on('ready', async () => {
       logger.info(`Bot logged in as ${client.user?.tag}`, {
         service: 'Bot',
         userId: client.user?.id,
       });
+
+      // Sync slash commands with Discord
+      logger.info('Syncing slash commands on bot ready...', { service: 'Bot' });
+      await slashCommandManager.syncSlashCommands();
 
       // Set bot status
       if (client.user) {

@@ -20,7 +20,7 @@ export class GDPRDataExportCommand extends Command {
   name = 'gdprexport';
   description = 'Export your data in portable format (GDPR Right to Data Portability)';
   aliases = ['exportdata', 'dataportability'];
-  usage = 'gdprexport [json|csv]';
+  usage = 'gdprexport [format]';
   examples = ['gdprexport json', 'gdprexport csv'];
   requiredPermissions: string[] = [];
 

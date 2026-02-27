@@ -78,14 +78,21 @@ export class SlashCommandManager {
 
     for (const [, command] of this.commands) {
       try {
+        // Skip commands with subcommands or complex patterns
+        // These need manual slash command configuration in a future update
+        if (command.usage && command.usage.includes('|')) {
+          logger.debug(`Skipping slash command for ${command.name} (has subcommands)`, {
+            service: 'SlashCommandManager',
+          });
+          continue;
+        }
+
         // Create slash command builder
         const builder = new SlashCommandBuilder()
           .setName(command.name)
           .setDescription(command.description || 'No description provided');
 
         // Set default member permissions if required
-        // Note: @discordjs/builders@0.16.0 (discord.js v13) doesn't support setDefaultMemberPermissions
-        // Permissions are checked at runtime in the command's execute method
         if (command.requiredPermissions && command.requiredPermissions.length > 0) {
           const builderAny = builder as unknown as {
             setDefaultMemberPermissions?: (perms: number) => unknown;
@@ -115,7 +122,7 @@ export class SlashCommandManager {
 
         // Add optional string option if command has arguments
         // Only add if the usage pattern is simple (avoid multi-subcommand patterns)
-        if (command.usage && command.usage.includes('[') && !command.usage.includes('|')) {
+        if (command.usage && command.usage.includes('[')) {
           const match = command.usage.match(/\[([^\]]+)\]/);
           if (match) {
             const optionName = match[1];
@@ -131,9 +138,13 @@ export class SlashCommandManager {
                 const optAny = option as unknown as {
                   setName: (n: string) => unknown;
                   setDescription: (d: string) => unknown;
+                  setRequired?: (r: boolean) => unknown;
                 };
-                optAny.setName(optionName);
+                optAny.setName(optionName.toLowerCase());
                 optAny.setDescription(`${optionName} (optional)`);
+                if (optAny.setRequired) {
+                  optAny.setRequired(false);
+                }
                 return option;
               });
             }

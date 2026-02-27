@@ -3,10 +3,7 @@ import { MessageEmbed, User } from 'discord.js';
 /**
  * Create success embed
  */
-export function createSuccessEmbed(
-  title: string,
-  description?: string
-): MessageEmbed {
+export function createSuccessEmbed(title: string, description?: string): MessageEmbed {
   return new MessageEmbed()
     .setTitle(`✅ ${title}`)
     .setDescription(description || '')
@@ -17,10 +14,7 @@ export function createSuccessEmbed(
 /**
  * Create error embed
  */
-export function createErrorEmbed(
-  title: string,
-  description?: string
-): MessageEmbed {
+export function createErrorEmbed(title: string, description?: string): MessageEmbed {
   return new MessageEmbed()
     .setTitle(`❌ ${title}`)
     .setDescription(description || '')
@@ -31,10 +25,7 @@ export function createErrorEmbed(
 /**
  * Create info embed
  */
-export function createInfoEmbed(
-  title: string,
-  description?: string
-): MessageEmbed {
+export function createInfoEmbed(title: string, description?: string): MessageEmbed {
   return new MessageEmbed()
     .setTitle(`ℹ️ ${title}`)
     .setDescription(description || '')

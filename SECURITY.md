@@ -9,12 +9,14 @@ The project has been fully audited and all vulnerable packages have been resolve
 ## Installation & Validation
 
 ### Prerequisites Met
+
 - ✅ Node.js v20.20.0 (native WSL installation)
 - ✅ npm v11.7.0 (native WSL installation)
 - ✅ All npm packages installed
 - ✅ npm audit passed with zero vulnerabilities
 
 ### Build Status
+
 - ✅ TypeScript compiled successfully
 - ✅ All source files validated
 - ✅ dist/ folder generated
@@ -25,24 +27,24 @@ The project has been fully audited and all vulnerable packages have been resolve
 
 ### Production Dependencies
 
-| Package | Version | Status |
-|---------|---------|--------|
+| Package    | Version  | Status                 |
+| ---------- | -------- | ---------------------- |
 | discord.js | ^13.17.1 | ✅ Latest stable (v13) |
-| pg | ^8.19.0 | ✅ Latest v8 |
-| dotenv | ^16.6.1 | ✅ Latest v16 |
-| winston | ^3.19.0 | ✅ Latest v3 |
+| pg         | ^8.19.0  | ✅ Latest v8           |
+| dotenv     | ^16.6.1  | ✅ Latest v16          |
+| winston    | ^3.19.0  | ✅ Latest v3           |
 
 ### Development Dependencies
 
-| Package | Version | Status |
-|---------|---------|--------|
-| @types/node | ^20.19.35 | ✅ Latest |
-| @types/pg | ^8.16.0 | ✅ Latest |
-| typescript | ^5.9.3 | ✅ Latest v5 |
-| tsx | ^4.21.0 | ✅ Latest v4 |
-| @typescript-eslint/eslint-plugin | ^8.56.1 | ✅ Latest v8 |
-| @typescript-eslint/parser | ^8.56.1 | ✅ Latest v8 |
-| eslint | ^9.39.3 | ✅ Latest v9 |
+| Package                          | Version   | Status       |
+| -------------------------------- | --------- | ------------ |
+| @types/node                      | ^20.19.35 | ✅ Latest    |
+| @types/pg                        | ^8.16.0   | ✅ Latest    |
+| typescript                       | ^5.9.3    | ✅ Latest v5 |
+| tsx                              | ^4.21.0   | ✅ Latest v4 |
+| @typescript-eslint/eslint-plugin | ^8.56.1   | ✅ Latest v8 |
+| @typescript-eslint/parser        | ^8.56.1   | ✅ Latest v8 |
+| eslint                           | ^9.39.3   | ✅ Latest v9 |
 
 ---
 
@@ -51,10 +53,12 @@ The project has been fully audited and all vulnerable packages have been resolve
 ### Vulnerability Status: ✅ RESOLVED
 
 **Before Audit:**
+
 - 4 moderate severity vulnerabilities detected
 - Root cause: discord.js v14 had undici <6.23.0 dependency (decompression DoS)
 
 **After Audit:**
+
 - ✅ 0 vulnerabilities
 - ✅ 0 high severity issues
 - ✅ 0 critical issues
@@ -62,6 +66,7 @@ The project has been fully audited and all vulnerable packages have been resolve
 ### Resolution Strategy
 
 The vulnerabilities stemmed from discord.js v14's transitive dependency on undici <6.23.0 (CVE-2025-32572):
+
 - **Vulnerability**: Unbounded decompression chain in HTTP responses
 - **CVSS Score**: 5.9 (Moderate)
 - **Fix**: Updated to discord.js v13.17.1 (latest stable v13)
@@ -77,6 +82,7 @@ The vulnerabilities stemmed from discord.js v14's transitive dependency on undic
 Updated `src/index.ts` for v13 API compatibility:
 
 **Before (v14):**
+
 ```typescript
 import { Client, GatewayIntentBits } from 'discord.js';
 
@@ -90,15 +96,12 @@ const client = new Client({
 ```
 
 **After (v13):**
+
 ```typescript
 import { Client, Intents } from 'discord.js';
 
 const client = new Client({
-  intents: [
-    Intents.FLAGS.GUILDS,
-    Intents.FLAGS.GUILD_MESSAGES,
-    Intents.FLAGS.MESSAGE_CONTENT,
-  ],
+  intents: [Intents.FLAGS.GUILDS, Intents.FLAGS.GUILD_MESSAGES, Intents.FLAGS.MESSAGE_CONTENT],
 });
 ```
 
@@ -107,6 +110,7 @@ const client = new Client({
 ## npm Configuration
 
 Added `.npmrc` for WSL compatibility:
+
 ```ini
 # Disable post-install scripts that fail in WSL interop
 ignore-scripts=true
@@ -163,18 +167,18 @@ npm outdated
 ✅ ESLint v9 with modern rules  
 ✅ Non-root container execution in Dockerfile  
 ✅ Environment-based secrets (no hardcoded tokens)  
-✅ Package-lock.json locked and committed  
+✅ Package-lock.json locked and committed
 
 ---
 
 ## Recommended Maintenance Schedule
 
-| Frequency | Action |
-|-----------|--------|
-| **Weekly** | Review security advisories on GitHub |
-| **Monthly** | Run `npm audit` to detect new issues |
-| **Quarterly** | Run `npm update` to apply patches |
-| **Annually** | Evaluate major version upgrades |
+| Frequency     | Action                               |
+| ------------- | ------------------------------------ |
+| **Weekly**    | Review security advisories on GitHub |
+| **Monthly**   | Run `npm audit` to detect new issues |
+| **Quarterly** | Run `npm update` to apply patches    |
+| **Annually**  | Evaluate major version upgrades      |
 
 ---
 
@@ -207,4 +211,3 @@ npm install discord.js@^14
 - **npm version**: 11.7.0
 - **node version**: 20.20.0
 - **Status**: ✅ All systems go
-

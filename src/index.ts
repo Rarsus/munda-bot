@@ -38,11 +38,7 @@ async function main(): Promise<void> {
     });
 
     // Create command handler
-    const commandHandler = new CommandHandler(
-      '!',
-      client.commands,
-      client.aliases
-    );
+    const commandHandler = new CommandHandler('!', client.commands, client.aliases);
 
     // Event: Ready
     client.on('ready', () => {

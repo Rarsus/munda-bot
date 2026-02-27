@@ -25,7 +25,7 @@ export class BotClient extends Client {
    */
   public registerCommand(command: ICommand): void {
     this.commands.set(command.name, command);
-    
+
     if (command.aliases) {
       command.aliases.forEach((alias) => {
         this.aliases.set(alias, command.name);

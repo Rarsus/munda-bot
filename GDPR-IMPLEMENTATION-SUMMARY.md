@@ -25,9 +25,11 @@ The Discord bot has been fully refactored to implement **enterprise-grade GDPR c
 ## 🔐 Data Architecture - Complete Segregation
 
 ### 1. Global User Data (GDPR-compliant)
+
 **Table**: `gdpr_user_data`
 
 `Only` contains data directly belonging to the user:
+
 - Discord ID (primary identifier)
 - Username & discriminator
 - Optional email, avatar, locale, bio
@@ -35,10 +37,12 @@ The Discord bot has been fully refactored to implement **enterprise-grade GDPR c
 
 **Key**: User data is **independent** of guild data
 
-### 2. Guild-Segregated Member Data  
+### 2. Guild-Segregated Member Data
+
 **Table**: `gdpr_guild_member_data`
 
 Guild-specific member records:
+
 - Guild ID (segregation key)
 - User ID (reference only - NOT embedded)
 - Membership metadata (joined_at, roles, mute, deaf)
@@ -47,24 +51,29 @@ Guild-specific member records:
 **Key**: Each guild owns its member data; guilds can be deleted without affecting user data
 
 ### 3. Consent Management
+
 **Table**: `gdpr_consent`
 
 Tracks explicit user consent:
+
 - Per-user, per-consent-type records
 - States: GIVEN, WITHDRAWN, EXPIRED
 - Version tracking for policy updates
 - Withdrawal timestamps for disputes
 
 **Consent Types Tracked**:
+
 - DATA_COLLECTION
 - MESSAGE_LOGGING
 - ANALYTICS
 - MARKETING
 
 ### 4. Audit Logging (Immutable)
+
 **Table**: `gdpr_audit_log`
 
 **NEVER DELETED** - Legally required 3-year retention:
+
 - Event types: access, create, update, delete, consent, erasure
 - Subject user + requesting user
 - Resource identification
@@ -77,9 +86,11 @@ Tracks explicit user consent:
 ## 👤 User Rights Implementation (GDPR Articles 15-22)
 
 ### Right to Access (Article 15)
+
 ✅ **Implemented via**: `/gdprdata` command
 
 **What users can do**:
+
 - View all personal data stored
 - See membership in guilds
 - Review audit trail
@@ -91,9 +102,11 @@ Tracks explicit user consent:
 ---
 
 ### Right to Rectification (Article 16)
+
 ✅ **Implemented via**: Profile edit commands
 
 **What users can do**:
+
 - Update email address
 - Change bio/profile info
 - Modify display preferences
@@ -105,6 +118,7 @@ Tracks explicit user consent:
 ---
 
 ### Right to Erasure - Right to be Forgotten (Article 17)
+
 ✅ **Implemented via**: `/gdprdelete [reason]` command
 
 **What happens when user requests deletion**:
@@ -130,9 +144,11 @@ Tracks explicit user consent:
 ---
 
 ### Right to Data Portability (Article 20)
+
 ✅ **Implemented via**: `/gdprexport json` command
 
 **Export Package Contains**:
+
 ```json
 {
   "user": {
@@ -169,15 +185,18 @@ Tracks explicit user consent:
 ---
 
 ### Right to Restrict Processing (Article 18)
+
 ✅ **Implemented via**: Consent withdrawal (`/gdprdata` settings)
 
 **What users can do**:
+
 - Withdraw specific consent types
 - Prevent specific data processing
 - Maintain relationship with bot
 - Re-give consent anytime
 
 **Implementation**:
+
 ```typescript
 // Before processing any data:
 const hasConsent = await gdprService.hasConsent(userId, ConsentType.ANALYTICS);
@@ -189,9 +208,11 @@ if (!hasConsent) {
 ---
 
 ### Right to Object (Article 21)
+
 ✅ **Implemented via**: Consent system + erasure requests
 
 **What users can do**:
+
 - Object to specific processing activities
 - Withdraw consent at any time
 - Request complete data deletion
@@ -200,6 +221,7 @@ if (!hasConsent) {
 ---
 
 ### Automated Decision-Making & Profiling (Article 22)
+
 ✅ **Not applicable** - Bot has no automated decision-making or profiling
 
 ---
@@ -207,29 +229,34 @@ if (!hasConsent) {
 ## 🛡️ Security & Compliance Features
 
 ### Immutable Audit Logging
+
 - Every data access logged with user, time, reason
 - Hashed IP addresses for fraud detection
 - Change tracking with before/after values
 - 3-year legal retention automatically enforced
 
 ### Consent Management
+
 - Granular per-user, per-type consent
 - Explicit opt-in (not opt-out)
 - Withdrawal timestamps
 - Policy version tracking
 
 ### Data Minimization
+
 - Only essential data collected
 - No unnecessary profiling
 - Optional email field (for verification only)
 - No IP address storage (only hashed for audit)
 
 ### Encryption
+
 - Would include: TLS/SSL in transit (Discord API)
 - Would include: Encryption at rest (when implemented)
 - Sensitive fields: Email, hashes only
 
 ### Access Control
+
 - Users can ONLY access their own data
 - Guild owners can access their guild's member data
 - Admins with audit access only
@@ -240,6 +267,7 @@ if (!hasConsent) {
 ## 📊 Database Schema
 
 ### Tables Created
+
 ```
 ✅ gdpr_user_data               (Global user profiles)
 ✅ gdpr_guild_member_data       (Guild-scoped members)
@@ -250,6 +278,7 @@ if (!hasConsent) {
 ```
 
 ### Indices for Performance
+
 ```
 ✅ User lookups               (O(1))
 ✅ Guild-user lookups        (O(1))
@@ -258,6 +287,7 @@ if (!hasConsent) {
 ```
 
 ### Constraints & Validation
+
 ```
 ✅ Unique constraints on (user_id, consent_type)
 ✅ Unique on (guild_id, user_id) for members
@@ -270,6 +300,7 @@ if (!hasConsent) {
 ## 📚 Software Components
 
 ### Interfaces (Type-Safe)
+
 ```
 src/interfaces/gdpr/
 ├── IGDPRConsent.ts              (Consent records)
@@ -280,6 +311,7 @@ src/interfaces/gdpr/
 ```
 
 ### Repositories (Data Layer)
+
 ```
 src/services/database/gdpr/
 ├── GDPRUserDataRepository.ts    (Global user data CRUD)
@@ -291,6 +323,7 @@ src/services/database/gdpr/
 ```
 
 ### Services (Business Logic)
+
 ```
 src/services/gdpr/
 ├── GDPRService.ts              (Main orchestration)
@@ -298,12 +331,14 @@ src/services/gdpr/
 ```
 
 ### Middleware (Request Handling)
+
 ```
 src/middleware/
 ├── gdpr.ts                     (GDPR enforcement)
 ```
 
 ### Commands (User Interface)
+
 ```
 src/commands/gdpr/
 ├── GDPRDataAccessCommand.ts    (/gdprdata)
@@ -313,6 +348,7 @@ src/commands/gdpr/
 ```
 
 ### Documentation
+
 ```
 ✅ /GDPR-COMPLIANCE.md          (380+ lines comprehensive guide)
 ```
@@ -322,7 +358,9 @@ src/commands/gdpr/
 ## 🎯 User Commands
 
 ### /gdprdata
+
 Access your personal data (Right to Access)
+
 ```
 Usage: /gdprdata
 Response: Embed showing:
@@ -335,7 +373,9 @@ Response: Embed showing:
 ```
 
 ### /gdprexport [format]
+
 Export your data in portable format (Right to Portability)
+
 ```
 Usage: /gdprexport json
 Response: JSON file containing:
@@ -346,7 +386,9 @@ Response: JSON file containing:
 ```
 
 ### /gdprdelete [reason]
+
 Request data deletion (Right to be Forgotten)
+
 ```
 Usage: /gdprdelete My reason for deletion
 Response: Confirmation with:
@@ -360,28 +402,30 @@ Response: Confirmation with:
 
 ## ⚖️ Compliance Deadlines
 
-| GDPR Right | Deadline | Implementation | Status |
-|------------|----------|-----------------|--------|
-| Access (Art. 15) | 30 days | `/gdprdata` | ✅ |
-| Rectification (Art. 16) | Immediately | Settings | ✅ |
-| Erasure (Art. 17) | 30 days | `/gdprdelete` | ✅ |
-| Data Portability (Art. 20) | 30 days | `/gdprexport` | ✅ |
-| Restrict (Art. 18) | Immediately | Consent | ✅ |
-| Notification (Art. 34) | 72 hours* | Audit system | ✅ |
+| GDPR Right                 | Deadline    | Implementation | Status |
+| -------------------------- | ----------- | -------------- | ------ |
+| Access (Art. 15)           | 30 days     | `/gdprdata`    | ✅     |
+| Rectification (Art. 16)    | Immediately | Settings       | ✅     |
+| Erasure (Art. 17)          | 30 days     | `/gdprdelete`  | ✅     |
+| Data Portability (Art. 20) | 30 days     | `/gdprexport`  | ✅     |
+| Restrict (Art. 18)         | Immediately | Consent        | ✅     |
+| Notification (Art. 34)     | 72 hours\*  | Audit system   | ✅     |
 
-*Breach notification would be implemented via admin alerts
+\*Breach notification would be implemented via admin alerts
 
 ---
 
 ## 🔍 Testing Checklist
 
 ### User Data Access
+
 - [x] `/gdprdata` returns only user's own data
 - [x] No cross-user data leakage
 - [x] Audit log entry created for access
 - [x] Response within SLA
 
 ### Data Export
+
 - [x] `/gdprexport` generates complete package
 - [x] JSON format validated
 - [x] File download works
@@ -389,6 +433,7 @@ Response: Confirmation with:
 - [x] Export logged as audit event
 
 ### Data Deletion
+
 - [x] `/gdprdelete` creates valid request
 - [x] 30-day window enforced
 - [x] Deletes user data when executed
@@ -398,6 +443,7 @@ Response: Confirmation with:
 - [x] Completion timestamp recorded
 
 ### Consent Management
+
 - [x] Consent can be given
 - [x] Consent can be withdrawn
 - [x] Consent status checks work
@@ -405,6 +451,7 @@ Response: Confirmation with:
 - [x] Policy version tracked
 
 ### Audit Trail
+
 - [x] All events logged
 - [x] Access timestamp recorded
 - [x] Requesting user identified
@@ -417,6 +464,7 @@ Response: Confirmation with:
 ## 📖 Documentation
 
 ### Included Files
+
 1. **GDPR-COMPLIANCE.md** (380+ lines)
    - Complete architecture description
    - Implementation details
@@ -443,30 +491,35 @@ Response: Confirmation with:
 ## 🚀 Production Readiness
 
 ### ✅ Code Quality
+
 - TypeScript strict mode enabled
 - Full type safety across all layers
 - No `any` types outside legitimate uses
 - Comprehensive error handling
 
 ### ✅ Security
+
 - SQL injection prevention (prepared statements)
 - XSS protection (Discord API handles)
 - Access control enforcement
 - Audit logging mandatory
 
 ### ✅ Performance
+
 - Indexed queries (O(1) user lookups)
 - Efficient pagination support
 - Batch operations for bulk deletion
 - Transaction support for consistency
 
 ### ✅ Compliance
+
 - GDPR Article 15-22 implemented
 - Data breach notification ready
 - DPO reporting capabilities
 - Retention policies enforced
 
 ### ✅ Maintainability
+
 - Clean code architecture
 - Clear separation of concerns
 - Comprehensive documentation
@@ -477,18 +530,21 @@ Response: Confirmation with:
 ## 🔄 Integration Points
 
 ### With Existing Bot
+
 - Integrates with Discord.js v13
 - Uses existing database pool
 - Compatible with current command system
 - Extends auth middleware
 
 ### Database
+
 - PostgreSQL 12+
 - Standard SQL with JSON support
 - Connection pooling ready
 - Transaction support enabled
 
 ### User Interface
+
 - Discord slash commands
 - DM-safe responses
 - Ephemeral messages for privacy
@@ -499,6 +555,7 @@ Response: Confirmation with:
 ## 📝 Next Steps for Deployment
 
 1. **Database Setup**
+
    ```sql
    -- Run SQL schema from GDPR-COMPLIANCE.md
    CREATE TABLE gdpr_user_data { ... }
@@ -531,6 +588,7 @@ Response: Confirmation with:
 ## ✅ Conclusion
 
 The bot is now **fully GDPR compliant** with:
+
 - ✅ Complete data segregation per guild
 - ✅ All 6 user rights implemented
 - ✅ Immutable audit trails
@@ -544,4 +602,3 @@ The bot is now **fully GDPR compliant** with:
 **Last Verified**: February 27,2025
 **Implementation Version**: 1.0
 **GDPR Standard**: Regulation (EU) 2016/679
-

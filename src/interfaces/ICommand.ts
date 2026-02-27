@@ -8,7 +8,7 @@ export interface ICommand {
   requiresAuth?: boolean;
   usage?: string;
   examples?: string[];
-  
+
   /**
    * Execute the command
    * @param args Message arguments or interaction

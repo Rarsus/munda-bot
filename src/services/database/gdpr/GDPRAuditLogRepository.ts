@@ -1,11 +1,7 @@
 import { Pool } from 'pg';
 import { BaseRepository } from '../BaseRepository';
 import { logger } from '../../logger';
-import {
-  IGDPRAuditLog,
-  IGDPRAuditLogInput,
-  AuditEventType,
-} from '../../../interfaces/gdpr';
+import { IGDPRAuditLog, IGDPRAuditLogInput, AuditEventType } from '../../../interfaces/gdpr';
 
 /**
  * GDPR Audit Log repository
@@ -115,10 +111,7 @@ export class GDPRAuditLogRepository extends BaseRepository<IGDPRAuditLog> {
       );
       return result.rows;
     } catch (error) {
-      logger.error(
-        `Error getting audit logs for ${resourceType} ${resourceId}:`,
-        error
-      );
+      logger.error(`Error getting audit logs for ${resourceType} ${resourceId}:`, error);
       throw error;
     }
   }
@@ -147,7 +140,7 @@ export class GDPRAuditLogRepository extends BaseRepository<IGDPRAuditLog> {
    */
   async countUserAccessAttempts(userId: string): Promise<number> {
     try {
-      const result = await this.query<{ count: string}>(
+      const result = await this.query<{ count: string }>(
         `SELECT COUNT(*) as count FROM ${this.tableName} 
          WHERE (subject_user_id = $1 OR requesting_user_id = $1) 
          AND event_type LIKE '%ACCESSED%'`,
@@ -155,10 +148,7 @@ export class GDPRAuditLogRepository extends BaseRepository<IGDPRAuditLog> {
       );
       return parseInt(result.rows[0]?.count || '0', 10);
     } catch (error) {
-      logger.error(
-        `Error counting user access attempts for ${userId}:`,
-        error
-      );
+      logger.error(`Error counting user access attempts for ${userId}:`, error);
       return 0;
     }
   }

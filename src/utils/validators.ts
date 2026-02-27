@@ -21,10 +21,7 @@ export function validateEmail(email: unknown): asserts email is string {
 /**
  * Validate non-empty string
  */
-export function validateNonEmptyString(
-  value: unknown,
-  fieldName: string
-): asserts value is string {
+export function validateNonEmptyString(value: unknown, fieldName: string): asserts value is string {
   if (typeof value !== 'string' || value.trim().length === 0) {
     throw new ValidationError(`${fieldName} cannot be empty`);
   }

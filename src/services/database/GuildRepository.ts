@@ -19,10 +19,9 @@ export class GuildRepository extends BaseRepository<IGuild> {
    * Find guild by Discord guild ID
    */
   async findByDiscordGuildId(discordGuildId: string): Promise<IGuild | null> {
-    const result = await this.query<IGuild>(
-      'SELECT * FROM guilds WHERE discord_guild_id = $1',
-      [discordGuildId]
-    );
+    const result = await this.query<IGuild>('SELECT * FROM guilds WHERE discord_guild_id = $1', [
+      discordGuildId,
+    ]);
 
     return result.rows[0] || null;
   }

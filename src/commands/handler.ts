@@ -8,7 +8,11 @@ export class CommandHandler {
   private commands: Collection<string, ICommand>;
   private aliases: Collection<string, string>;
 
-  constructor(prefix: string, commands: Collection<string, ICommand>, aliases: Collection<string, string>) {
+  constructor(
+    prefix: string,
+    commands: Collection<string, ICommand>,
+    aliases: Collection<string, string>
+  ) {
     this.prefix = prefix;
     this.commands = commands;
     this.aliases = aliases;
@@ -48,11 +52,9 @@ export class CommandHandler {
       });
 
       if ('safeExecute' in command) {
-        await (command as unknown as { safeExecute(...args: unknown[]): Promise<void> }).safeExecute(
-          message,
-          this.commands,
-          ...args
-        );
+        await (
+          command as unknown as { safeExecute(...args: unknown[]): Promise<void> }
+        ).safeExecute(message, this.commands, ...args);
       } else {
         await command.execute(message, this.commands, ...args);
       }
@@ -87,10 +89,9 @@ export class CommandHandler {
       });
 
       if ('safeExecute' in command) {
-        await (command as unknown as { safeExecute(...args: unknown[]): Promise<void> }).safeExecute(
-          interaction,
-          this.commands
-        );
+        await (
+          command as unknown as { safeExecute(...args: unknown[]): Promise<void> }
+        ).safeExecute(interaction, this.commands);
       } else {
         await command.execute(interaction, this.commands);
       }

@@ -59,9 +59,7 @@ export class HelpCommand extends Command {
       }
     } else {
       // List all commands
-      const commandList = commands
-        .map((cmd) => `\`${cmd.name}\` - ${cmd.description}`)
-        .join('\n');
+      const commandList = commands.map((cmd) => `\`${cmd.name}\` - ${cmd.description}`).join('\n');
 
       const embed = new MessageEmbed()
         .setTitle('📚 Available Commands')

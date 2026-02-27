@@ -1,10 +1,7 @@
 import { Message, CommandInteraction, MessageEmbed } from 'discord.js';
 import { Command } from '../base';
 import { GDPRService } from '../../services/gdpr';
-import {
-  verifyDataOwnership,
-  logDataAccess,
-} from '../../middleware/gdpr';
+import { verifyDataOwnership, logDataAccess } from '../../middleware/gdpr';
 import { logger } from '../../services/logger';
 
 /**
@@ -44,7 +41,7 @@ export class GDPRDataAccessCommand extends Command {
         const embed = new MessageEmbed()
           .setColor('#ff9900')
           .setTitle('⚠️ No Data Found')
-          .setDescription('We don\'t have any data stored for you in our system.')
+          .setDescription("We don't have any data stored for you in our system.")
           .setFooter('Data: ' + new Date().toISOString());
 
         if (context instanceof Message) {
@@ -92,11 +89,7 @@ export class GDPRDataAccessCommand extends Command {
       const errorEmbed = new MessageEmbed()
         .setColor('#ff0000')
         .setTitle('❌ Error Retrieving Your Data')
-        .setDescription(
-          error instanceof Error
-            ? error.message
-            : 'An unexpected error occurred'
-        )
+        .setDescription(error instanceof Error ? error.message : 'An unexpected error occurred')
         .setFooter('If this persists, please contact support');
 
       if (context instanceof Message) {

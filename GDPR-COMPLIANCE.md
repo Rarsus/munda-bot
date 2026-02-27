@@ -56,6 +56,7 @@ Stores **segregated** member data per guild:
 ```
 
 **Key Points**:
+
 - Each guild owns its members' data
 - User IDs are references only (no duplication)
 - Deleting user data ONLY affects global user data
@@ -76,6 +77,7 @@ Global consent tracking (not guild-specific):
 ```
 
 **Policy**: Consent is:
+
 - Explicit (opt-in, not opt-out)
 - Granular (per consent type)
 - Timestamped (for audit trail)
@@ -151,6 +153,7 @@ await userDataRepository.updateUser(userId, {
 ```
 
 **Restrictions**:
+
 - Users can only update their own data
 - Admins can update any user's data (with audit logging)
 
@@ -173,12 +176,14 @@ const report = await gdprService.executeErasure(
 ```
 
 **What Gets Deleted**:
+
 - ✅ User profile data
 - ✅ All guild member records
 - ✅ Consent history
 - ❌ Audit logs (retained by law)
 
 **Deletion Process**:
+
 1. User submits request to /gdprdelete
 2. System validates request (30-day window)
 3. Admin approval (optional, depending on policy)
@@ -217,19 +222,13 @@ enum ConsentType {
 1. **Initial Consent**: User gives explicit consent when joining
 
 ```typescript
-const consent = await gdprService.giveConsent(
-  userId,
-  ConsentType.DATA_COLLECTION
-);
+const consent = await gdprService.giveConsent(userId, ConsentType.DATA_COLLECTION);
 ```
 
 2. **Check Consent Before Processing**:
 
 ```typescript
-const canProcess = await gdprService.hasConsent(
-  userId,
-  ConsentType.MESSAGE_LOGGING
-);
+const canProcess = await gdprService.hasConsent(userId, ConsentType.MESSAGE_LOGGING);
 
 if (!canProcess) {
   // Skip logging this user's messages
@@ -273,8 +272,8 @@ enum AuditEventType {
 ```typescript
 await auditRepository.logEvent({
   event_type: AuditEventType.USER_DATA_ACCESSED,
-  subject_user_id: userId,        // Whose data
-  requesting_user_id: adminId,    // Who accessed it
+  subject_user_id: userId, // Whose data
+  requesting_user_id: adminId, // Who accessed it
   resource_type: 'user',
   resource_id: userId,
   action: 'Admin accessed user data for investigation',
@@ -297,6 +296,7 @@ const auditLogs = await auditRepository.exportUserAuditTrail(userId);
 ## Database Schema (SQL)
 
 ### gdpr_user_data
+
 ```sql
 CREATE TABLE gdpr_user_data (
   user_id VARCHAR(255) PRIMARY KEY,
@@ -317,6 +317,7 @@ CREATE INDEX idx_deleted_at ON gdpr_user_data(deleted_at);
 ```
 
 ### gdpr_guild_member_data
+
 ```sql
 CREATE TABLE gdpr_guild_member_data (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -344,6 +345,7 @@ CREATE INDEX idx_guild_user ON gdpr_guild_member_data(guild_id, user_id);
 ```
 
 ### gdpr_consent
+
 ```sql
 CREATE TABLE gdpr_consent (
   id VARCHAR(255) PRIMARY KEY,
@@ -366,6 +368,7 @@ CREATE INDEX idx_consent_type ON gdpr_consent(consent_type);
 ```
 
 ### gdpr_audit_log
+
 ```sql
 CREATE TABLE gdpr_audit_log (
   id VARCHAR(255) PRIMARY KEY,
@@ -401,6 +404,7 @@ CREATE INDEX idx_retained ON gdpr_audit_log(retained_until);
 ## Implementation Best Practices
 
 ### 1. Data Minimization
+
 ```typescript
 // ✅ GOOD: Only collect necessary data
 const userData = {
@@ -418,6 +422,7 @@ const userData = {
 ```
 
 ### 2. Consent Before Processing
+
 ```typescript
 // ✅ GOOD: Check consent first
 if (await gdprService.hasConsent(userId, ConsentType.MESSAGE_LOGGING)) {
@@ -430,6 +435,7 @@ await logMessageWithoutConsent(message);
 ```
 
 ### 3. Secure Deletion
+
 ```typescript
 // ✅ GOOD: Use prepared statements and transactions
 const client = await pool.connect();
@@ -446,6 +452,7 @@ await pool.query(`DELETE FROM users WHERE id = '${userId}'`);
 ```
 
 ### 4. Audit Everything
+
 ```typescript
 // ✅ GOOD: Log every data access
 await auditRepository.logEvent({
@@ -460,6 +467,7 @@ const user = await getUserData(userId); // No audit trail
 ```
 
 ### 5. Segregated Access
+
 ```typescript
 // ✅ GOOD: User can only see their data
 async function getMyData(userId: string) {
@@ -478,32 +486,36 @@ async function getNobodysDatum(request: Request) {
 
 ## Compliance Deadlines
 
-| Right | Deadline | Implementation |
-|-------|----------|-----------------|
-| Right to Access | 30 days | `/gdprdata` command |
-| Right to Rectification | Immediate | User profile settings |
-| Right to Erasure | 30 days | `/gdprdelete` command |
-| Right to Data Portability | 30 days | `/gdprexport` command |
-| Right to Restrict | Immediate | Consent withdrawal |
-| Breach Notification | 72 hours | Admin notification system |
+| Right                     | Deadline  | Implementation            |
+| ------------------------- | --------- | ------------------------- |
+| Right to Access           | 30 days   | `/gdprdata` command       |
+| Right to Rectification    | Immediate | User profile settings     |
+| Right to Erasure          | 30 days   | `/gdprdelete` command     |
+| Right to Data Portability | 30 days   | `/gdprexport` command     |
+| Right to Restrict         | Immediate | Consent withdrawal        |
+| Breach Notification       | 72 hours  | Admin notification system |
 
 ---
 
 ## Retention Policies
 
 ### User Data
+
 - **Retention**: Kept until user requests deletion or 3 years of inactivity
 - **After Deletion**: Marked `deleted_at` (soft delete) for 90 days, then permanent deletion
 
 ### Guild Member Data
+
 - **Retention**: For duration of guild membership
 - **After Leaving**: Soft deleted, permanent deletion after 30 days
 
 ### Consent Records
+
 - **Retention**: Until revoked or expiration date
 - **After Revocation**: Kept in archive indefinitely (audit requirement)
 
 ### Audit Logs
+
 - **Retention**: Minimum 3 years (legal requirement)
 - **After Retention**: May be archived to cold storage but NEVER deleted
 
@@ -512,6 +524,7 @@ async function getNobodysDatum(request: Request) {
 ## Testing GDPR Compliance
 
 ### User Data Access Test
+
 ```bash
 # User requests their own data
 /gdprdata
@@ -523,6 +536,7 @@ async function getNobodysDatum(request: Request) {
 ```
 
 ### Data Export Test
+
 ```bash
 # User requests data portability
 /gdprexport json
@@ -535,6 +549,7 @@ async function getNobodysDatum(request: Request) {
 ```
 
 ### Data Deletion Test
+
 ```bash
 # User requests data erasure
 /gdprdelete
@@ -551,24 +566,20 @@ async function getNobodysDatum(request: Request) {
 ## Admin Management
 
 ### View GDPR Requests
+
 ```typescript
 // Get pending erasure requests
 const pending = await erasureRepository.getPendingErasureRequests();
 
 // Approve erasure
-await erasureRepository.approveErasureRequest(
-  requestId,
-  adminId
-);
+await erasureRepository.approveErasureRequest(requestId, adminId);
 
 // Execute erasure
-const report = await gdprService.executeErasure(
-  requestId,
-  adminId
-);
+const report = await gdprService.executeErasure(requestId, adminId);
 ```
 
 ### Audit Trail Queries
+
 ```typescript
 // View user's data access history
 const auditLogs = await auditRepository.getUserAuditLogs(userId);
@@ -591,6 +602,7 @@ const report = await auditRepository.exportUserAuditTrail(userId);
 ## Support & Questions
 
 For questions about GDPR compliance or data rights:
+
 - ✉️ Email: privacy@example.com
 - 🎟️ Submit a request: `/gdprdata`, `/gdprexport`, `/gdprdelete`
 - 📖 Read: This documentation

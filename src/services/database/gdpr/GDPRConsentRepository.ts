@@ -24,10 +24,9 @@ export class GDPRConsentRepository extends BaseRepository<IGDPRConsent> {
    */
   async getUserConsents(userId: string): Promise<IGDPRConsent[]> {
     try {
-      const result = await this.query(
-        `SELECT * FROM ${this.tableName} WHERE user_id = $1`,
-        [userId]
-      );
+      const result = await this.query(`SELECT * FROM ${this.tableName} WHERE user_id = $1`, [
+        userId,
+      ]);
       return result.rows;
     } catch (error) {
       logger.error(`Error getting consents for user ${userId}:`, error);
@@ -38,10 +37,7 @@ export class GDPRConsentRepository extends BaseRepository<IGDPRConsent> {
   /**
    * Get specific consent for user
    */
-  async getUserConsent(
-    userId: string,
-    consentType: ConsentType
-  ): Promise<IGDPRConsent | null> {
+  async getUserConsent(userId: string, consentType: ConsentType): Promise<IGDPRConsent | null> {
     try {
       const result = await this.query(
         `SELECT * FROM ${this.tableName} WHERE user_id = $1 AND consent_type = $2`,
@@ -49,10 +45,7 @@ export class GDPRConsentRepository extends BaseRepository<IGDPRConsent> {
       );
       return result.rows[0] || null;
     } catch (error) {
-      logger.error(
-        `Error getting ${consentType} consent for user ${userId}:`,
-        error
-      );
+      logger.error(`Error getting ${consentType} consent for user ${userId}:`, error);
       throw error;
     }
   }
@@ -124,10 +117,7 @@ export class GDPRConsentRepository extends BaseRepository<IGDPRConsent> {
 
       return result.rows[0];
     } catch (error) {
-      logger.error(
-        `Error updating consent for user ${userId}:`,
-        error
-      );
+      logger.error(`Error updating consent for user ${userId}:`, error);
       throw error;
     }
   }
@@ -141,9 +131,7 @@ export class GDPRConsentRepository extends BaseRepository<IGDPRConsent> {
         `UPDATE ${this.tableName} SET status = $1, withdrawn_at = NOW(), updated_at = NOW() WHERE user_id = $2 RETURNING id`,
         [ConsentStatus.WITHDRAWN, userId]
       );
-      logger.info(
-        `Withdrew ${result.rows.length} consents for user ${userId}`
-      );
+      logger.info(`Withdrew ${result.rows.length} consents for user ${userId}`);
       return result.rows.length;
     } catch (error) {
       logger.error(`Error withdrawing consents for user ${userId}:`, error);
@@ -154,10 +142,7 @@ export class GDPRConsentRepository extends BaseRepository<IGDPRConsent> {
   /**
    * Check if user has given consent
    */
-  async hasConsent(
-    userId: string,
-    consentType: ConsentType
-  ): Promise<boolean> {
+  async hasConsent(userId: string, consentType: ConsentType): Promise<boolean> {
     try {
       const consent = await this.getUserConsent(userId, consentType);
       if (!consent) return false;

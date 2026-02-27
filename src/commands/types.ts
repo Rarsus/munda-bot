@@ -4,7 +4,10 @@ import { Command } from './base';
 /**
  * Parse command arguments from message
  */
-export function parseCommandArgs(message: Message, prefix: string = '!'): {
+export function parseCommandArgs(
+  message: Message,
+  prefix: string = '!'
+): {
   command: string;
   args: string[];
 } {

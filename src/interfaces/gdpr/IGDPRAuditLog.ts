@@ -37,24 +37,24 @@ export enum AuditEventType {
 export interface IGDPRAuditLog {
   id: string;
   event_type: AuditEventType;
-  
+
   // WHO: Which user performed/is subject of action
   subject_user_id?: string; // User being accessed/modified
   requesting_user_id?: string; // Admin who accessed it
-  
+
   // WHAT: Data scope
   resource_type: 'user' | 'member' | 'guild';
   resource_id: string; // user_id, member_id, or guild_id
   guild_id?: string; // If member or guild resource
-  
+
   // HOW: Details
   action: string; // Specific action performed
   changes?: Record<string, any>; // What changed (for updates)
-  
+
   // SECURITY
   ip_address_hash?: string; // Hashed for audit trail
   user_agent_hash?: string; // Hashed
-  
+
   // TIMESTAMPS
   created_at: Date;
   retained_until: Date; // GDPR retention policy date

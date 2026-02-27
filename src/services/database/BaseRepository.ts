@@ -34,10 +34,7 @@ export class BaseRepository<T extends QueryResultRow = any> {
    * Get single row by ID
    */
   async getById(id: string | number): Promise<T | null> {
-    const result = await this.query<T>(
-      `SELECT * FROM ${this.tableName} WHERE id = $1`,
-      [id]
-    );
+    const result = await this.query<T>(`SELECT * FROM ${this.tableName} WHERE id = $1`, [id]);
 
     return result.rows[0] || null;
   }
@@ -118,10 +115,7 @@ export class BaseRepository<T extends QueryResultRow = any> {
    * Delete a row
    */
   async delete(id: string | number): Promise<boolean> {
-    const result = await this.query(
-      `DELETE FROM ${this.tableName} WHERE id = $1`,
-      [id]
-    );
+    const result = await this.query(`DELETE FROM ${this.tableName} WHERE id = $1`, [id]);
 
     return result.rowCount ? result.rowCount > 0 : false;
   }
@@ -129,9 +123,7 @@ export class BaseRepository<T extends QueryResultRow = any> {
   /**
    * Execute transaction
    */
-  async transaction<R>(
-    callback: (client: PoolClient) => Promise<R>
-  ): Promise<R> {
+  async transaction<R>(callback: (client: PoolClient) => Promise<R>): Promise<R> {
     const client = await this.pool.connect();
 
     try {

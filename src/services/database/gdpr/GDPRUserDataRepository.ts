@@ -64,10 +64,7 @@ export class GDPRUserDataRepository extends BaseRepository<IGDPRUserData> {
    * Update user data
    * Only the user themselves can update their own data
    */
-  async updateUser(
-    userId: string,
-    input: IGDPRUserDataUpdateInput
-  ): Promise<IGDPRUserData> {
+  async updateUser(userId: string, input: IGDPRUserDataUpdateInput): Promise<IGDPRUserData> {
     try {
       const updates: string[] = [];
       const values: any[] = [];
@@ -140,10 +137,7 @@ export class GDPRUserDataRepository extends BaseRepository<IGDPRUserData> {
       await client.query('BEGIN');
 
       // Delete user data
-      await client.query(
-        `DELETE FROM ${this.tableName} WHERE user_id = $1`,
-        [userId]
-      );
+      await client.query(`DELETE FROM ${this.tableName} WHERE user_id = $1`, [userId]);
 
       await client.query('COMMIT');
       logger.warn(`Permanently deleted user ${userId} data`);

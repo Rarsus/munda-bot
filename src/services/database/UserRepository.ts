@@ -11,10 +11,9 @@ export class UserRepository extends BaseRepository<IUser> {
    * Find user by Discord ID
    */
   async findByDiscordId(discordId: string): Promise<IUser | null> {
-    const result = await this.query<IUser>(
-      'SELECT * FROM users WHERE discord_id = $1',
-      [discordId]
-    );
+    const result = await this.query<IUser>('SELECT * FROM users WHERE discord_id = $1', [
+      discordId,
+    ]);
 
     return result.rows[0] || null;
   }

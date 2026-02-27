@@ -71,9 +71,7 @@ export class GDPRService {
    */
   async getUserGuildMemberships(userId: string): Promise<IGDPRGuildMemberData[]> {
     try {
-      const memberships = await this.memberDataRepository.getUserGuildMemberships(
-        userId
-      );
+      const memberships = await this.memberDataRepository.getUserGuildMemberships(userId);
 
       // Audit log the access
       await this.auditRepository.logEvent({
@@ -98,9 +96,7 @@ export class GDPRService {
     try {
       // Gather all user data
       const userData = await this.userDataRepository.getUserById(userId);
-      const memberships = await this.memberDataRepository.getUserGuildMemberships(
-        userId
-      );
+      const memberships = await this.memberDataRepository.getUserGuildMemberships(userId);
       const consents = await this.consentRepository.getUserConsents(userId);
       const auditLogs = await this.auditRepository.exportUserAuditTrail(userId);
 
@@ -162,10 +158,7 @@ export class GDPRService {
 
       return portablePackage;
     } catch (error) {
-      logger.error(
-        `Error getting data portability package for ${userId}:`,
-        error
-      );
+      logger.error(`Error getting data portability package for ${userId}:`, error);
       throw error;
     }
   }
@@ -232,10 +225,7 @@ export class GDPRService {
       const userId = (erasureRequest as any).user_id;
 
       // Update erasure status
-      await this.erasureRepository.updateErasureStatus(
-        erasureRequestId,
-        'in_progress'
-      );
+      await this.erasureRepository.updateErasureStatus(erasureRequestId, 'in_progress');
 
       // Delete user data
       if (erasureRequest.delete_user_data) {
@@ -246,9 +236,7 @@ export class GDPRService {
 
       // Delete guild memberships
       if (erasureRequest.delete_guild_memberships) {
-        const count = await this.memberDataRepository.deleteUserFromAllGuilds(
-          userId
-        );
+        const count = await this.memberDataRepository.deleteUserFromAllGuilds(userId);
         deletionSummary.guild_memberships = count;
         deletionCount += count;
       }
@@ -305,10 +293,7 @@ export class GDPRService {
       logger.error(`Error executing erasure ${erasureRequestId}:`, error);
 
       // Mark as failed
-      await this.erasureRepository.updateErasureStatus(
-        erasureRequestId,
-        'failed'
-      );
+      await this.erasureRepository.updateErasureStatus(erasureRequestId, 'failed');
 
       throw error;
     } finally {
@@ -323,10 +308,7 @@ export class GDPRService {
     try {
       return await this.consentRepository.hasConsent(userId, consentType);
     } catch (error) {
-      logger.error(
-        `Error checking consent for user ${userId}:`,
-        error
-      );
+      logger.error(`Error checking consent for user ${userId}:`, error);
       return false;
     }
   }
@@ -334,26 +316,16 @@ export class GDPRService {
   /**
    * Give consent
    */
-  async giveConsent(
-    userId: string,
-    consentType: ConsentType
-  ): Promise<IGDPRConsent> {
+  async giveConsent(userId: string, consentType: ConsentType): Promise<IGDPRConsent> {
     try {
-      const existing = await this.consentRepository.getUserConsent(
-        userId,
-        consentType
-      );
+      const existing = await this.consentRepository.getUserConsent(userId, consentType);
 
       let consent: IGDPRConsent;
 
       if (existing) {
-        consent = await this.consentRepository.updateConsent(
-          userId,
-          consentType,
-          {
-            status: 'given' as any,
-          }
-        );
+        consent = await this.consentRepository.updateConsent(userId, consentType, {
+          status: 'given' as any,
+        });
       } else {
         consent = await (this.consentRepository.createConsent as any)({
           user_id: userId,
@@ -374,10 +346,7 @@ export class GDPRService {
 
       return consent;
     } catch (error) {
-      logger.error(
-        `Error giving consent for user ${userId}:`,
-        error
-      );
+      logger.error(`Error giving consent for user ${userId}:`, error);
       throw error;
     }
   }
@@ -385,19 +354,12 @@ export class GDPRService {
   /**
    * Withdraw consent
    */
-  async withdrawConsent(
-    userId: string,
-    consentType: ConsentType
-  ): Promise<IGDPRConsent> {
+  async withdrawConsent(userId: string, consentType: ConsentType): Promise<IGDPRConsent> {
     try {
-      const consent = await this.consentRepository.updateConsent(
-        userId,
-        consentType,
-        {
-          status: 'withdrawn' as any,
-          withdrawn_at: new Date(),
-        }
-      );
+      const consent = await this.consentRepository.updateConsent(userId, consentType, {
+        status: 'withdrawn' as any,
+        withdrawn_at: new Date(),
+      });
 
       // Audit log
       await this.auditRepository.logEvent({
@@ -410,10 +372,7 @@ export class GDPRService {
 
       return consent;
     } catch (error) {
-      logger.error(
-        `Error withdrawing consent for user ${userId}:`,
-        error
-      );
+      logger.error(`Error withdrawing consent for user ${userId}:`, error);
       throw error;
     }
   }

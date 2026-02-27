@@ -44,7 +44,7 @@ export async function query<T>(text: string, params?: unknown[]): Promise<T[]> {
   if (!pool) {
     throw new Error('Database not initialized');
   }
-  
+
   try {
     const result = await pool.query(text, params);
     return result.rows;

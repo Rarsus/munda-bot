@@ -23,10 +23,7 @@ export class GDPRDataAccessRequestRepository extends BaseRepository<IGDPRDataAcc
    */
   async getRequest(requestId: string): Promise<IGDPRDataAccessRequest | null> {
     try {
-      const result = await this.query(
-        `SELECT * FROM ${this.tableName} WHERE id = $1`,
-        [requestId]
-      );
+      const result = await this.query(`SELECT * FROM ${this.tableName} WHERE id = $1`, [requestId]);
       return result.rows[0] || null;
     } catch (error) {
       logger.error(`Error getting request ${requestId}:`, error);
@@ -37,9 +34,7 @@ export class GDPRDataAccessRequestRepository extends BaseRepository<IGDPRDataAcc
   /**
    * Create new data access request
    */
-  async createRequest(
-    input: IGDPRDataAccessRequestInput
-  ): Promise<IGDPRDataAccessRequest> {
+  async createRequest(input: IGDPRDataAccessRequestInput): Promise<IGDPRDataAccessRequest> {
     try {
       const id = `dar_${input.user_id}_${Date.now()}`;
       const expiresAt = new Date();
@@ -49,14 +44,7 @@ export class GDPRDataAccessRequestRepository extends BaseRepository<IGDPRDataAcc
         `INSERT INTO ${this.tableName} (id, user_id, request_type, status, data_format, requested_at, expires_at, created_at, updated_at)
          VALUES ($1, $2, $3, $4, $5, NOW(), $6, NOW(), NOW())
          RETURNING *`,
-        [
-          id,
-          input.user_id,
-          input.request_type,
-          'pending',
-          input.data_format || 'json',
-          expiresAt,
-        ]
+        [id, input.user_id, input.request_type, 'pending', input.data_format || 'json', expiresAt]
       );
       return result.rows[0];
     } catch (error) {
@@ -150,9 +138,7 @@ export class GDPRErasureRequestRepository extends BaseRepository<IGDPRErasureReq
   /**
    * Create new erasure request
    */
-  async createErasureRequest(
-    input: IGDPRErasureRequestInput
-  ): Promise<IGDPRErasureRequest> {
+  async createErasureRequest(input: IGDPRErasureRequestInput): Promise<IGDPRErasureRequest> {
     try {
       const id = `erasure_${input.user_id}_${Date.now()}`;
 
@@ -252,10 +238,7 @@ export class GDPRErasureRequestRepository extends BaseRepository<IGDPRErasureReq
   /**
    * Approve erasure request
    */
-  async approveErasureRequest(
-    requestId: string,
-    approvedBy: string
-  ): Promise<IGDPRErasureRequest> {
+  async approveErasureRequest(requestId: string, approvedBy: string): Promise<IGDPRErasureRequest> {
     try {
       const result = await this.query(
         `UPDATE ${this.tableName} SET status = 'approved', approved_by = $1, approved_at = NOW(), updated_at = NOW() WHERE id = $2 RETURNING *`,

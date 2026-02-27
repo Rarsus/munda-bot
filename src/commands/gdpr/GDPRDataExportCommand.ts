@@ -44,32 +44,16 @@ export class GDPRDataExportCommand extends Command {
       const embed = new MessageEmbed()
         .setColor('#00ff00')
         .setTitle('✅ Data Export Created')
-        .setDescription(
-          'Your complete data package has been generated and is ready for download.'
-        )
+        .setDescription('Your complete data package has been generated and is ready for download.')
         .addField(
           'Contents',
           `- Personal Profile\n- Guild Memberships (${dataPackage.guild_memberships.length})\n- Consent Records (${dataPackage.consents.length})\n- Access Audit Trail (${dataPackage.audit_summary.total_accesses} entries)`,
           false
         )
-        .addField(
-          'Format',
-          'JSON (machine-readable, universally compatible)',
-          true
-        )
-        .addField(
-          'Size',
-          `${(jsonData.length / 1024).toFixed(2)} KB`,
-          true
-        )
-        .addField(
-          'Generated At',
-          dataPackage.exported_at.toISOString(),
-          false
-        )
-        .setFooter(
-          'This file contains all your data. Store it securely. Data valid for 30 days.'
-        );
+        .addField('Format', 'JSON (machine-readable, universally compatible)', true)
+        .addField('Size', `${(jsonData.length / 1024).toFixed(2)} KB`, true)
+        .addField('Generated At', dataPackage.exported_at.toISOString(), false)
+        .setFooter('This file contains all your data. Store it securely. Data valid for 30 days.');
 
       if (context instanceof Message) {
         // For message commands, send the embed and data file
@@ -103,15 +87,8 @@ export class GDPRDataExportCommand extends Command {
       const errorEmbed = new MessageEmbed()
         .setColor('#ff0000')
         .setTitle('❌ Error Exporting Your Data')
-        .setDescription(
-          error instanceof Error
-            ? error.message
-            : 'An unexpected error occurred'
-        )
-        .addField(
-          'What to do',
-          'If this error persists, please contact the bot administrator'
-        )
+        .setDescription(error instanceof Error ? error.message : 'An unexpected error occurred')
+        .addField('What to do', 'If this error persists, please contact the bot administrator')
         .setFooter('Request ID: ' + Date.now());
 
       if (context instanceof Message) {

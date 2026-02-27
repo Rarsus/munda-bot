@@ -100,6 +100,7 @@ client.registerCommand(myCommand);
 ```
 
 **Features:**
+
 - Automatic error handling via `safeExecute` wrapper
 - Support for both message and interaction contexts
 - Aliases for alternative command names
@@ -126,17 +127,17 @@ throw new AppError('CUSTOM_CODE', 'Custom message', 400);
 #### Authorization/Authentication
 
 ```typescript
-import { 
-  requirePermissions, 
-  requireAdmin, 
+import {
+  requirePermissions,
+  requireAdmin,
   requireGuildOwner,
-  isAdmin 
+  isAdmin
 } from '../middleware/auth';
 
 // In a command
 async execute(context: Message | CommandInteraction): Promise<void> {
   await requireAdmin(context); // Throws AuthorizationError if not admin
-  
+
   if (isAdmin(context)) {
     // Do something only admins can do
   }
@@ -204,6 +205,7 @@ await db.auditLogs.logAction({
 ```
 
 **Repositories Available:**
+
 - `db.users` - UserRepository
 - `db.guilds` - GuildRepository
 - `db.guildMembers` - GuildMemberRepository
@@ -216,11 +218,7 @@ await db.auditLogs.logAction({
 #### Validators
 
 ```typescript
-import { 
-  validateDiscordId, 
-  validateUsername, 
-  validateGuildName 
-} from '../utils/validators';
+import { validateDiscordId, validateUsername, validateGuildName } from '../utils/validators';
 
 // These throw ValidationError on failure
 validateDiscordId(id);
@@ -231,12 +229,7 @@ validateGuildName(name);
 #### Helpers
 
 ```typescript
-import { 
-  createSuccessEmbed, 
-  createErrorEmbed,
-  formatDate,
-  paginate 
-} from '../utils/helpers';
+import { createSuccessEmbed, createErrorEmbed, formatDate, paginate } from '../utils/helpers';
 
 const embed = createSuccessEmbed('Success!', 'Operation completed');
 const errorEmbed = createErrorEmbed('Error', 'Something went wrong');
@@ -270,7 +263,7 @@ export class UserInfoCommand extends Command {
     }
 
     const embed = createInfoEmbed(`User: ${user.username}`, `ID: ${user.id}`);
-    
+
     if (context instanceof Message) {
       await context.reply({ embeds: [embed] });
     } else {
@@ -293,7 +286,7 @@ export class AdminCommand extends Command {
 
     // Safe to proceed with admin action
     const embed = createSuccessEmbed('Admin Action', 'Executed successfully');
-    
+
     if (context instanceof Message) {
       await context.reply({ embeds: [embed] });
     } else {
@@ -344,10 +337,12 @@ validateConfig();
 ```
 
 Required environment variables:
+
 - `DISCORD_TOKEN` - Discord bot token
 - `DATABASE_URL` - PostgreSQL connection string
 
 Optional:
+
 - `NODE_ENV` - Environment (development/production)
 - `LOG_LEVEL` - Log level (debug/info/warn/error)
 - `GCP_PROJECT_ID` - GCP project ID
@@ -357,6 +352,7 @@ Optional:
 ## 🚀 Development Workflow
 
 1. **Create a new command:**
+
    ```bash
    # Create src/commands/examples/mycommand.ts
    # Extend Command class
@@ -364,6 +360,7 @@ Optional:
    ```
 
 2. **Add database entity:**
+
    ```bash
    # Create interface in src/interfaces/IMyEntity.ts
    # Create repository in src/services/database/MyRepository.ts
@@ -372,12 +369,14 @@ Optional:
    ```
 
 3. **Add validation:**
+
    ```bash
    # Add validator to src/utils/validators.ts
    # Use in command: validateMyField(input)
    ```
 
 4. **Test locally:**
+
    ```bash
    npm run dev
    ```
@@ -394,22 +393,27 @@ Optional:
 ## 🔐 Security Best Practices
 
 1. **Always validate input:**
+
    ```typescript
-   validateUsername(input);  // Throws if invalid
+   validateUsername(input); // Throws if invalid
    ```
 
 2. **Check permissions before sensitive operations:**
+
    ```typescript
    await requireAdmin(context);
    ```
 
 3. **Log sensitive actions:**
+
    ```typescript
    await db.auditLogs.logAction({
      guild_id: guildId,
      user_id: userId,
      action: 'sensitive_action',
-     details: { /* sanitized details */ },
+     details: {
+       /* sanitized details */
+     },
    });
    ```
 

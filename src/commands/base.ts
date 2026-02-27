@@ -24,10 +24,7 @@ export abstract class Command implements ICommand {
   /**
    * Safe execute wrapper with error handling
    */
-  async safeExecute(
-    args: Message | CommandInteraction,
-    ...params: unknown[]
-  ): Promise<void> {
+  async safeExecute(args: Message | CommandInteraction, ...params: unknown[]): Promise<void> {
     try {
       await this.execute(args, ...params);
     } catch (error) {

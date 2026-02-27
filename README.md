@@ -70,6 +70,7 @@ docker-compose up --build
 ```
 
 This starts:
+
 - Discord bot (Node.js container)
 - PostgreSQL database
 - Automatic schema initialization
@@ -192,12 +193,12 @@ gcloud app versions list
 
 ## Environment Variables
 
-| Variable | Required | Description |
-|----------|----------|---|
-| `DISCORD_TOKEN` | ✅ | Your Discord bot token |
-| `DATABASE_URL` | ✅ | PostgreSQL connection string |
-| `NODE_ENV` | ❌ | `production` or `development` |
-| `LOG_LEVEL` | ❌ | `debug`, `info`, `warn`, `error` |
+| Variable        | Required | Description                      |
+| --------------- | -------- | -------------------------------- |
+| `DISCORD_TOKEN` | ✅       | Your Discord bot token           |
+| `DATABASE_URL`  | ✅       | PostgreSQL connection string     |
+| `NODE_ENV`      | ❌       | `production` or `development`    |
+| `LOG_LEVEL`     | ❌       | `debug`, `info`, `warn`, `error` |
 
 ## Database Schema
 
@@ -242,6 +243,7 @@ Logs are written to `logs/` directory (combined.log and error.log)
 ### Kubernetes (Manual)
 
 HPA configured for:
+
 - CPU: 70% utilization trigger
 - Memory: 80% utilization trigger
 - Min replicas: 2
@@ -293,11 +295,13 @@ docker push gcr.io/PROJECT_ID/discord-bot:latest
 ## Cost Estimation (Google Cloud)
 
 **Cloud Run:**
+
 - Requests: ~$0.40 per 1M requests
 - Memory: ~$6.50 per GB-month
 - Estimate: $5-15/month (low traffic)
 
 **Cloud SQL (db-f1-micro):**
+
 - Instance: $9.50/month
 - Storage: ~$0.18/GB/month
 - Estimate: $10-20/month

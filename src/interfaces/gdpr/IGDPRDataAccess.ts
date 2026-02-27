@@ -65,7 +65,6 @@ export interface IGDPRDataPortablePackage {
   export_version: string;
 }
 
-
 /**
  * Erasure request for "Right to be Forgotten"
  * Complete data deletion with audit trail
@@ -78,18 +77,18 @@ export interface IGDPRErasureRequest {
   approved_at?: Date;
   completed_at?: Date;
   reason?: string; // Why user is requesting erasure
-  
+
   // Deletion targets
   delete_user_data: boolean; // Global user profile
   delete_guild_memberships: boolean; // All guild member records
   delete_consents: boolean; // Consent history
   delete_audit_logs: boolean; // Access logs (may be kept by law)
-  
+
   // Audit trail
   approved_by?: string; // If admin approval needed
   error_message?: string;
   deletions_count?: number; // How many records deleted
-  
+
   created_at: Date;
   updated_at: Date;
 }

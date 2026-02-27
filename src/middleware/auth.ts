@@ -56,9 +56,7 @@ export function isAdmin(context: Message | CommandInteraction): boolean {
 /**
  * Require admin permissions
  */
-export async function requireAdmin(
-  context: Message | CommandInteraction
-): Promise<void> {
+export async function requireAdmin(context: Message | CommandInteraction): Promise<void> {
   if (!isAdmin(context)) {
     throw new AuthorizationError('This command requires administrator permissions');
   }
@@ -79,9 +77,7 @@ export function isGuildOwner(context: Message | CommandInteraction): boolean {
 /**
  * Require guild owner
  */
-export async function requireGuildOwner(
-  context: Message | CommandInteraction
-): Promise<void> {
+export async function requireGuildOwner(context: Message | CommandInteraction): Promise<void> {
   if (!isGuildOwner(context)) {
     throw new AuthorizationError('Only the guild owner can use this command');
   }

@@ -21,10 +21,7 @@ export class GDPRDataDeletionCommand extends Command {
   description = 'Request deletion of your personal data (GDPR Right to be Forgotten)';
   aliases = ['deletedata', 'erasure'];
   usage = 'gdprdelete [reason]';
-  examples = [
-    'gdprdelete',
-    'gdprdelete I no longer want my data stored',
-  ];
+  examples = ['gdprdelete', 'gdprdelete I no longer want my data stored'];
   requiredPermissions: string[] = [];
 
   async execute(context: Message | CommandInteraction): Promise<void> {
@@ -45,18 +42,13 @@ export class GDPRDataDeletionCommand extends Command {
       }
 
       // Create erasure request
-      const erasureRequest = await this.gdprService.requestErasure(
-        userId,
-        reason
-      );
+      const erasureRequest = await this.gdprService.requestErasure(userId, reason);
 
       // Create confirmation embed
       const confirmEmbed = new MessageEmbed()
         .setColor('#ffcc00')
         .setTitle('⚠️ Data Deletion Request Initiated')
-        .setDescription(
-          'Your request to delete all personal data has been submitted.'
-        )
+        .setDescription('Your request to delete all personal data has been submitted.')
         .addField('Request ID', erasureRequest.id, false)
         .addField('Status', 'PENDING', true)
         .addField('Submitted At', new Date().toISOString(), true)
@@ -64,11 +56,7 @@ export class GDPRDataDeletionCommand extends Command {
           'What will be deleted',
           '- Personal profile data\n- Guild membership records\n- Consent history\n- Bot interaction history'
         )
-        .addField(
-          'What is retained',
-          '- Audit logs (required by law)',
-          false
-        )
+        .addField('What is retained', '- Audit logs (required by law)', false)
         .addField(
           'Important',
           'This action is permanent and cannot be undone. You have 30 days to cancel this request before processing begins.',
@@ -88,24 +76,10 @@ export class GDPRDataDeletionCommand extends Command {
       const nextStepsEmbed = new MessageEmbed()
         .setColor('#0099ff')
         .setTitle('📋 Next Steps')
-        .setDescription(
-          'Your deletion request has been queued. Here\'s what happens next:'
-        )
-        .addField(
-          '1. Review',
-          'Our team will review your request (usually within 24 hours)',
-          false
-        )
-        .addField(
-          '2. Confirmation',
-          'We will send you a confirmation message via DM',
-          false
-        )
-        .addField(
-          '3. Execution',
-          'Your data will be permanently deleted within 30 days',
-          false
-        )
+        .setDescription("Your deletion request has been queued. Here's what happens next:")
+        .addField('1. Review', 'Our team will review your request (usually within 24 hours)', false)
+        .addField('2. Confirmation', 'We will send you a confirmation message via DM', false)
+        .addField('3. Execution', 'Your data will be permanently deleted within 30 days', false)
         .addField(
           '4. Report',
           'You will receive a deletion completion certificate for your records',
@@ -122,19 +96,12 @@ export class GDPRDataDeletionCommand extends Command {
         });
       }
     } catch (error) {
-      logger.error(
-        `Error in GDPRDataDeletionCommand for user ${userId}:`,
-        error
-      );
+      logger.error(`Error in GDPRDataDeletionCommand for user ${userId}:`, error);
 
       const errorEmbed = new MessageEmbed()
         .setColor('#ff0000')
         .setTitle('❌ Error Submitting Deletion Request')
-        .setDescription(
-          error instanceof Error
-            ? error.message
-            : 'An unexpected error occurred'
-        )
+        .setDescription(error instanceof Error ? error.message : 'An unexpected error occurred')
         .addField(
           'Troubleshooting',
           'Please ensure:\n- You are sending this command as a direct message or in a guild where the bot is active\n- You have the latest version of Discord\n- Try again in a few moments'

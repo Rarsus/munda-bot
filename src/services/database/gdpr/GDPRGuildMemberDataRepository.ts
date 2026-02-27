@@ -23,10 +23,7 @@ export class GDPRGuildMemberDataRepository extends BaseRepository<IGDPRGuildMemb
    * User can access their own member data for a guild
    * Guild can access all member data in their guild
    */
-  async getMemberInGuild(
-    guildId: string,
-    userId: string
-  ): Promise<IGDPRGuildMemberData | null> {
+  async getMemberInGuild(guildId: string, userId: string): Promise<IGDPRGuildMemberData | null> {
     try {
       const result = await this.query(
         `SELECT * FROM ${this.tableName} WHERE guild_id = $1 AND user_id = $2 AND deleted_at IS NULL`,
@@ -34,10 +31,7 @@ export class GDPRGuildMemberDataRepository extends BaseRepository<IGDPRGuildMemb
       );
       return result.rows[0] || null;
     } catch (error) {
-      logger.error(
-        `Error getting member ${userId} in guild ${guildId}:`,
-        error
-      );
+      logger.error(`Error getting member ${userId} in guild ${guildId}:`, error);
       throw error;
     }
   }
@@ -77,9 +71,7 @@ export class GDPRGuildMemberDataRepository extends BaseRepository<IGDPRGuildMemb
   /**
    * Create member record
    */
-  async createMember(
-    input: IGDPRGuildMemberDataInput
-  ): Promise<IGDPRGuildMemberData> {
+  async createMember(input: IGDPRGuildMemberDataInput): Promise<IGDPRGuildMemberData> {
     try {
       const result = await this.query(
         `INSERT INTO ${this.tableName} (guild_id, user_id, joined_at, roles, nick, mute, deaf, pending, created_at, updated_at)
@@ -98,10 +90,7 @@ export class GDPRGuildMemberDataRepository extends BaseRepository<IGDPRGuildMemb
       );
       return result.rows[0];
     } catch (error) {
-      logger.error(
-        `Error creating member ${input.user_id} in guild ${input.guild_id}:`,
-        error
-      );
+      logger.error(`Error creating member ${input.user_id} in guild ${input.guild_id}:`, error);
       throw error;
     }
   }
@@ -150,17 +139,12 @@ export class GDPRGuildMemberDataRepository extends BaseRepository<IGDPRGuildMemb
       );
 
       if (!result.rows[0]) {
-        throw new Error(
-          `Member ${userId} not found in guild ${guildId}`
-        );
+        throw new Error(`Member ${userId} not found in guild ${guildId}`);
       }
 
       return result.rows[0];
     } catch (error) {
-      logger.error(
-        `Error updating member ${userId} in guild ${guildId}:`,
-        error
-      );
+      logger.error(`Error updating member ${userId} in guild ${guildId}:`, error);
       throw error;
     }
   }
@@ -176,10 +160,7 @@ export class GDPRGuildMemberDataRepository extends BaseRepository<IGDPRGuildMemb
       );
       logger.info(`Soft deleted member ${userId} from guild ${guildId}`);
     } catch (error) {
-      logger.error(
-        `Error soft deleting member ${userId} from guild ${guildId}:`,
-        error
-      );
+      logger.error(`Error soft deleting member ${userId} from guild ${guildId}:`, error);
       throw error;
     }
   }
@@ -206,10 +187,7 @@ export class GDPRGuildMemberDataRepository extends BaseRepository<IGDPRGuildMemb
   /**
    * Permanently delete member records
    */
-  async permanentlyDeleteGuildMembers(
-    guildId: string,
-    userIds: string[]
-  ): Promise<number> {
+  async permanentlyDeleteGuildMembers(guildId: string, userIds: string[]): Promise<number> {
     const client = await this.pool.connect();
     try {
       await client.query('BEGIN');
@@ -220,9 +198,7 @@ export class GDPRGuildMemberDataRepository extends BaseRepository<IGDPRGuildMemb
       );
 
       await client.query('COMMIT');
-      logger.warn(
-        `Permanently deleted ${result.rowCount} members from guild ${guildId}`
-      );
+      logger.warn(`Permanently deleted ${result.rowCount} members from guild ${guildId}`);
       return result.rowCount || 0;
     } catch (error) {
       await client.query('ROLLBACK');

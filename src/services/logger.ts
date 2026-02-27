@@ -12,28 +12,26 @@ export const logger = winston.createLogger({
     new winston.transports.Console({
       format: winston.format.combine(
         winston.format.colorize(),
-        winston.format.printf(
-          ({ level, message, timestamp, ...meta }) => {
-            let metaStr = '';
-            if (Object.keys(meta).length > 0 && meta.service) {
-              const { service, ...rest } = meta;
-              metaStr = Object.keys(rest).length > 0 ? ` ${JSON.stringify(rest)}` : '';
-            }
-            return `${timestamp} [${level}]: ${message}${metaStr}`;
+        winston.format.printf(({ level, message, timestamp, ...meta }) => {
+          let metaStr = '';
+          if (Object.keys(meta).length > 0 && meta.service) {
+            const { service, ...rest } = meta;
+            metaStr = Object.keys(rest).length > 0 ? ` ${JSON.stringify(rest)}` : '';
           }
-        )
-      )
+          return `${timestamp} [${level}]: ${message}${metaStr}`;
+        })
+      ),
     }),
-    new winston.transports.File({ 
-      filename: 'logs/error.log', 
+    new winston.transports.File({
+      filename: 'logs/error.log',
       level: 'error',
-      format: winston.format.json()
+      format: winston.format.json(),
     }),
-    new winston.transports.File({ 
+    new winston.transports.File({
       filename: 'logs/combined.log',
-      format: winston.format.json()
-    })
-  ]
+      format: winston.format.json(),
+    }),
+  ],
 });
 
 export default logger;
